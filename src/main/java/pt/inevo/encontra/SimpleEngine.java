@@ -21,15 +21,12 @@ class SimpleEngine extends Engine {
     public ResultSet search(Query query) {
 
         List<ResultSet> results = new ArrayList<ResultSet>();
-
         //sends the query to all the indexes that support that query type
         for (Index idx : indexes) {
             if (idx.supportsQueryType(query.getType())) { //if supports type then make the query
                 results.add(idx.search(query));
             }
         }
-
-        //System.out.println(results.toString());
 
         return combiner.combine(results);
     }
@@ -40,7 +37,11 @@ class SimpleEngine extends Engine {
         List<ResultSet> results = new ArrayList<ResultSet>();
 
         for (int i = 0; i < queries.length; i++) {
-            results.add(search(queries[i]));
+            ResultSet set = search(queries[i]);
+            if (set.getSize() != 0){    //if doesn't return results than skip it
+                results.add(search(queries[i]));
+            }
+
         }
 
         return combiner.combine(results);

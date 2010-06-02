@@ -17,7 +17,7 @@ public class SimpleQueryCombiner implements QueryCombiner {
     public ResultSet combine(List<ResultSet> results) {
 
         boolean first = true;
-        ResultSet combinedResultSet = null, set1 = null, set2 = null;
+        ResultSet combinedResultSet = new ResultSet(), set1 = null, set2 = null;
         for (int i = 0 ; i < results.size() ; i++){
 
             if (first){

@@ -1,14 +1,10 @@
 package pt.inevo.encontra;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 import junit.framework.TestCase;
 import pt.inevo.encontra.index.Index;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.RandomQuery;
 
@@ -54,8 +50,9 @@ public class EngineTest extends TestCase {
         System.out.println("Making some random queries and searching in the engine:");
         Query randomQuery = new RandomQuery();
         Query anotherRandomQuery = new RandomQuery();
+        Query knnQuery = new KnnQuery(new StringObject("StringObject1"), 5);
 
-        ResultSet results = e.search(new Query[]{randomQuery, anotherRandomQuery});
+        ResultSet results = e.search(new Query[]{randomQuery, anotherRandomQuery, knnQuery});
         System.out.println("Number of retrieved elements: " + results.getSize());
         while (results.hasNext()) {
 
