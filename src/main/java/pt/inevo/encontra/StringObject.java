@@ -1,22 +1,17 @@
 package pt.inevo.encontra;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
 import pt.inevo.encontra.index.AbstractObject;
 
 /**
  * String object just for testing
  * @author ricardo
  */
-public class StringObject extends AbstractObject {
+public class StringObject extends AbstractObject<Long> {
 
     protected String str;
 
     public StringObject(String s) {
+        super(new Long(s.length()));
         this.str = s;
     }
 

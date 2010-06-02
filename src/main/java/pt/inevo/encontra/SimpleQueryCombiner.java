@@ -1,16 +1,10 @@
 package pt.inevo.encontra;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 import java.util.ArrayList;
 import java.util.List;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.query.QueryCombiner;
-
 
 /**
  * The simplest Query results combiner. It just takes a group of ResulSet's
@@ -43,6 +37,13 @@ public class SimpleQueryCombiner implements QueryCombiner {
         return combinedResultSet;
     }
 
+    /**
+     * Brute force combination of two ResultSet's. Only Result's that appear on
+     * both ResultSet's are included in the result ResultSet.
+     * @param set1
+     * @param set2
+     * @return
+     */
     private ResultSet combineResultSets(ResultSet set1, ResultSet set2){
 
         List<Result> combinedResults = new ArrayList<Result>();

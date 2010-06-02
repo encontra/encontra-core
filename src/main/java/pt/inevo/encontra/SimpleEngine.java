@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package pt.inevo.encontra;
 
 import java.util.ArrayList;
@@ -27,13 +22,14 @@ class SimpleEngine extends Engine {
 
         List<ResultSet> results = new ArrayList<ResultSet>();
 
+        //sends the query to all the indexes that support that query type
         for (Index idx : indexes) {
-            if (idx.supportsQueryType(query.getType())) { //support type then make the query
+            if (idx.supportsQueryType(query.getType())) { //if supports type then make the query
                 results.add(idx.search(query));
             }
         }
 
-        System.out.println(results.toString());
+        //System.out.println(results.toString());
 
         return combiner.combine(results);
     }
