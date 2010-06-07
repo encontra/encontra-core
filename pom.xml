@@ -4,15 +4,17 @@
   <modelVersion>4.0.0</modelVersion>
   <name>EnContRA Core</name>
   <packaging>jar</packaging>
-  <groupId>pt.inevo.encontra</groupId>
-  <artifactId>encontra-core</artifactId>
-  <version>1.0-SNAPSHOT</version>
-      
+
+        
   <parent>
       <groupId>pt.inevo.encontra</groupId>
       <artifactId>encontra</artifactId>
       <version>1.0-SNAPSHOT</version>
   </parent>
+  
+  <artifactId>encontra-core</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
 
 </project>
 
