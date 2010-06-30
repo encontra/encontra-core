@@ -48,10 +48,13 @@ public class EngineTest extends TestCase {
         e.registerIndex(otherTextualIndex);
 
         System.out.println("Making some random queries and searching in the engine:");
+        System.out.println("Creating two random queries...");
         Query randomQuery = new RandomQuery();
         Query anotherRandomQuery = new RandomQuery();
+        System.out.println("Creating a knn query...");
         Query knnQuery = new KnnQuery(new StringObject("StringObject1"), 5);
 
+        System.out.println("Searching for elements in the engine...");
         ResultSet results = e.search(new Query[]{randomQuery, anotherRandomQuery, knnQuery});
         System.out.println("Number of retrieved elements: " + results.getSize());
         while (results.hasNext()) {
