@@ -1,5 +1,8 @@
 package pt.inevo.encontra;
 
+import pt.inevo.encontra.engine.SimpleEngine;
+import pt.inevo.encontra.index.LinearIndex;
+import pt.inevo.encontra.engine.Engine;
 import junit.framework.TestCase;
 import pt.inevo.encontra.index.Index;
 import pt.inevo.encontra.index.Result;
