@@ -6,12 +6,12 @@ import pt.inevo.encontra.index.AbstractObject;
  * String object just for testing
  * @author ricardo
  */
-public class StringObject extends AbstractObject<Long> {
+public class StringObject extends AbstractObject<String,Long> {
 
     protected String str;
 
     public StringObject(String s) {
-        super(s, new Long(s.length()));
+        super(s, (long) s.length());
         this.str = s;
     }
 
