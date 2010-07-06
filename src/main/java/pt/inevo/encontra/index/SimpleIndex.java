@@ -31,6 +31,14 @@ public class LinearIndex extends MemoryIndex {
     }
 
     @Override
+    public boolean contains(AbstractObject object){
+        if (idx.contains(object)){
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public List<AbstractObject> getAllObjects() {
         return idx;
     }
