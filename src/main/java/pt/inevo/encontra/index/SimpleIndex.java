@@ -3,6 +3,7 @@ package pt.inevo.encontra.index;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import pt.inevo.encontra.descriptors.Key;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.Query.QueryType;
 import pt.inevo.encontra.query.RangeQuery;
@@ -18,6 +19,26 @@ public class SimpleIndex extends MemoryIndex {
             new QueryType[]{QueryType.RANDOM, QueryType.RANGE,
                                 QueryType.TEXT, QueryType.KNN,
                                 QueryType.BOOLEAN};
+
+    class SimpleIndexComparator implements IndexComparator<Key<Double>, AbstractObject>{
+
+        @Override
+        public int indexCompare(Key<Double> k, AbstractObject o) {
+            Key<Double> key = extractKey(o);
+            return compare(k, key);
+        }
+
+        @Override
+        public Key<Double> extractKey(AbstractObject object) {
+            return new Key(Double.valueOf(object.getId().toString()));
+        }
+
+        @Override
+        public int compare(Key<Double> t, Key<Double> t1) {
+            return Double.compare(t.getKeyValue(), t1.getKeyValue());
+        }
+
+    }
 
     public SimpleIndex() {
         idx = new ArrayList<AbstractObject>();
