@@ -11,7 +11,7 @@ public class StringObject extends AbstractObject<Long> {
     protected String str;
 
     public StringObject(String s) {
-        super(new Long(s.length()));
+        super(s, new Long(s.length()));
         this.str = s;
     }
 

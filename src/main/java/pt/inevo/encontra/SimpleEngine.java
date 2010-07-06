@@ -11,9 +11,9 @@ import pt.inevo.encontra.query.Query;
  * the results of the queries realized to it.
  * @author ricardo
  */
-class SimpleEngine extends Engine {
+public class SimpleEngine extends Engine {
 
-    SimpleEngine() {
+    public SimpleEngine() {
         combiner = new SimpleQueryCombiner();
     }
 
@@ -39,7 +39,7 @@ class SimpleEngine extends Engine {
         for (int i = 0; i < queries.length; i++) {
             ResultSet set = search(queries[i]);
             if (set.getSize() != 0){    //if doesn't return results than skip it
-                results.add(search(queries[i]));
+                results.add(set);
             }
 
         }
