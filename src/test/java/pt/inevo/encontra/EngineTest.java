@@ -1,12 +1,12 @@
 package pt.inevo.encontra;
 
 import pt.inevo.encontra.engine.SimpleEngine;
-import pt.inevo.encontra.index.LinearIndex;
 import pt.inevo.encontra.engine.Engine;
 import junit.framework.TestCase;
 import pt.inevo.encontra.index.Index;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.RandomQuery;
@@ -37,8 +37,8 @@ public class EngineTest extends TestCase {
         Engine e = new SimpleEngine();
 
         System.out.println("Creating two indexes");
-        Index textualIndex = new LinearIndex();
-        Index otherTextualIndex = new LinearIndex();
+        Index textualIndex = new SimpleIndex();
+        Index otherTextualIndex = new SimpleIndex();
 
         System.out.println("Loading some objects to the test indexes");
         for (int i = 0; i < 10; i++) {
