@@ -11,10 +11,6 @@ public class AproximateKnnQuery extends KnnQuery {
 
     public AproximateKnnQuery(AbstractObject queryObject, int knn){
         super(queryObject, knn);
-    }
-
-    @Override
-    public QueryType getType(){
-        return QueryType.APROXIMATE_KNN;
+        super.type = QueryType.APROXIMATE_KNN;
     }
 }
