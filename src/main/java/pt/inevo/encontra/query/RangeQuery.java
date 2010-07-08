@@ -1,7 +1,6 @@
 package pt.inevo.encontra.query;
 
 import pt.inevo.encontra.index.AbstractObject;
-import pt.inevo.encontra.query.Query;
 
 /**
  * Range Query. Given a query (seed point) performs a range query using the
@@ -18,6 +17,7 @@ public class RangeQuery extends Query {
     public RangeQuery(AbstractObject query, double range){
         this.queryObject = query;
         this.range = range;
+        super.type = QueryType.RANGE;
     }
 
     /**
@@ -50,10 +50,5 @@ public class RangeQuery extends Query {
      */
     public void setRange(double range) {
         this.range = range;
-    }
-
-    @Override
-    public QueryType getType() {
-        return QueryType.RANGE;
     }
 }

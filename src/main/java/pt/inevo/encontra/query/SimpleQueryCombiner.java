@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
-import pt.inevo.encontra.query.QueryCombiner;
 
 /**
  * The simplest Query results combiner. It just takes a group of ResulSet's

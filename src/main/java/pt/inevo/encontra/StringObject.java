@@ -6,7 +6,7 @@ import pt.inevo.encontra.index.AbstractObject;
  * String object just for testing
  * @author ricardo
  */
-public class StringObject extends AbstractObject<String,Long> {
+public class StringObject extends AbstractObject<String, Long> {
 
     protected String str;
 

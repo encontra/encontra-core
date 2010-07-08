@@ -2,7 +2,6 @@ package pt.inevo.encontra.query;
 
 import java.util.ArrayList;
 import java.util.List;
-import pt.inevo.encontra.query.Query;
 
 /**
  * Boolean Query - Can do Queries like "A and B" or "A or B", etc.
@@ -15,10 +14,11 @@ public class BooleanQuery extends Query {
     }
 
     protected ArrayList<Query> clauses;
-    protected BooleanType type;
+    protected BooleanType booleanType;
 
     public BooleanQuery(){
         clauses = new ArrayList<Query>();
+        super.type = QueryType.BOOLEAN;
     }
 
     public void addClause(Query query){
@@ -30,7 +30,7 @@ public class BooleanQuery extends Query {
      * @return the type
      */
     public BooleanType getBooleanType() {
-        return type;
+        return booleanType;
     }
 
     /**
@@ -38,7 +38,7 @@ public class BooleanQuery extends Query {
      * @param type the type to set
      */
     public void setBooleanType(BooleanType type) {
-        this.type = type;
+        this.booleanType = type;
     }
 
     /**
@@ -55,10 +55,5 @@ public class BooleanQuery extends Query {
      */
     public void setClauses(ArrayList<Query> clauses) {
         this.clauses = clauses;
-    }
-
-    @Override
-    public QueryType getType() {
-        return QueryType.BOOLEAN;
     }
 }
