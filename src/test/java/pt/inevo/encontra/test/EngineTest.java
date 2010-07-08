@@ -1,5 +1,6 @@
-package pt.inevo.encontra;
+package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.StringObject;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.index.LinearIndex;
 import pt.inevo.encontra.engine.Engine;
@@ -37,13 +38,13 @@ public class EngineTest extends TestCase {
         Engine e = new SimpleEngine();
 
         System.out.println("Creating two indexes");
-        Index textualIndex = new LinearIndex();
-        Index otherTextualIndex = new LinearIndex();
+        Index<StringObject> textualIndex = new LinearIndex<StringObject>();
+        Index<StringObject> otherTextualIndex = new LinearIndex<StringObject>();
 
         System.out.println("Loading some objects to the test indexes");
         for (int i = 0; i < 10; i++) {
-            textualIndex.insertObject(new StringObject("StringObject" + i));
-            otherTextualIndex.insertObject(new StringObject("StringObject" + i));
+            textualIndex.insert(new StringObject("StringObject" + i));
+            otherTextualIndex.insert(new StringObject("StringObject" + i));
         }
 
         System.out.println("Registering the two indexes in the Retrieval Engine");
@@ -59,10 +60,8 @@ public class EngineTest extends TestCase {
 
         System.out.println("Searching for elements in the engine...");
         ResultSet results = e.search(new Query[]{randomQuery, anotherRandomQuery, knnQuery});
-        System.out.println("Number of retrieved elements: " + results.getSize());
-        while (results.hasNext()) {
-
-            Result r = results.getNext();
+        System.out.println("Number of retrieved elements: " + results.size());
+        for ( Result r : results) {
             System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
             System.out.println("Similarity: " + r.getSimilarity());
         }

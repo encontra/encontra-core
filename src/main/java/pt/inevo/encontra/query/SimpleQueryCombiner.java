@@ -48,11 +48,12 @@ public class SimpleQueryCombiner implements QueryCombiner {
 
         List<Result> combinedResults = new ArrayList<Result>();
 
-        while (set1.hasNext()){
-
-            Result r = set1.getNext();
-            if (set2.contains(r)){
-                combinedResults.add(r);
+        for(Result r1: set1){
+            if (set2.contains(r1)){
+                Result r2=set2.get(set2.indexOf(r1));
+                Result n = new Result(r1.getResultObject());
+                n.setSimilarity(r1.getSimilarity()*r2.getSimilarity());
+                combinedResults.add(n);
             }
         }
 

@@ -10,29 +10,28 @@ import pt.inevo.encontra.query.Query.QueryType;
  * A linear implementation of an Index. For now only accepts Random queries.
  * @author ricardo
  */
-public class LinearIndex extends MemoryIndex {
+public class LinearIndex<O extends AbstractObject & IndexEntry> extends ArrayList<O> implements MemoryIndex<O> {
 
-    protected ArrayList<AbstractObject> idx;
 
     public LinearIndex() {
-        idx = new ArrayList<AbstractObject>();
+        super();
     }
 
     @Override
-    public boolean insertObject(AbstractObject obj) {
-        idx.add(obj);
+    public boolean insert(O obj) {
+        super.add(obj);
         return true;
     }
 
     @Override
-    public boolean removeObject(AbstractObject obj) {
-        idx.remove(obj);
+    public boolean remove(O obj) {
+        super.remove(obj);
         return true;
     }
 
     @Override
-    public List<AbstractObject> getAllObjects() {
-        return idx;
+    public List<O> getAll() {
+        return this;
     }
 
     @Override
@@ -52,8 +51,8 @@ public class LinearIndex extends MemoryIndex {
             ArrayList<Result> res = new ArrayList<Result>();
             Random r = new Random();
             for (int i = 0; i < 7; i++) {
-                int position = r.nextInt(idx.size());
-                res.add(new Result(idx.get(position)));
+                int position = r.nextInt(size());
+                res.add(new Result<O>(get(position)));
             }
             return new ResultSet(res);
         } else {

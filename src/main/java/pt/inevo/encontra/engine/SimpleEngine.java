@@ -39,7 +39,7 @@ public class SimpleEngine extends Engine {
 
         for (int i = 0; i < queries.length; i++) {
             ResultSet set = search(queries[i]);
-            if (set.getSize() != 0){    //if doesn't return results than skip it
+            if (set.size() != 0){    //if doesn't return results than skip it
                 results.add(set);
             }
 
