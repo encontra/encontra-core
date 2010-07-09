@@ -1,5 +1,6 @@
 package pt.inevo.encontra.query;
 
+import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.AbstractObject;
 
 /**
@@ -9,8 +10,8 @@ import pt.inevo.encontra.index.AbstractObject;
  */
 public class AproximateKnnQuery extends KnnQuery {
 
-    public AproximateKnnQuery(AbstractObject queryObject, int knn){
-        super(queryObject, knn);
+    public AproximateKnnQuery(Descriptor query, int knn){
+        super(query, knn);
         super.type = QueryType.APROXIMATE_KNN;
     }
 }

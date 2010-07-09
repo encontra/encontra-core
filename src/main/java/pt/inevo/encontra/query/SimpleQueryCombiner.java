@@ -43,14 +43,15 @@ public class SimpleQueryCombiner implements QueryCombiner {
      * @param set2
      * @return
      */
-    private ResultSet combineResultSets(ResultSet set1, ResultSet set2){
+    @SuppressWarnings({"unchecked"})
+    private ResultSet combineResultSets(ResultSet<?> set1, ResultSet set2){
 
         List<Result> combinedResults = new ArrayList<Result>();
 
         for(Result r1: set1){
             if (set2.contains(r1)){
-                Result r2=set2.get(set2.indexOf(r1));
-                Result n = new Result(r1.getResultObject());
+                Result r2= set2.get(set2.indexOf(r1));
+                Result n = new Result(r1.getResult());
                 n.setSimilarity(r1.getSimilarity()*r2.getSimilarity());
                 combinedResults.add(n);
             }

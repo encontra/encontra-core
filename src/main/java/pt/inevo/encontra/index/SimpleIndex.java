@@ -12,9 +12,9 @@ import pt.inevo.encontra.query.RangeQuery;
  * A linear implementation of an Index.
  * @author ricardo
  */
-public class SimpleIndex extends MemoryIndex {
+public class SimpleIndex<E extends IndexEntry> implements MemoryIndex<E> {
 
-    protected ArrayList<AbstractObject> idx;
+    protected ArrayList<E> idx;
     protected static QueryType [] supportedTypes  =
             new QueryType[]{QueryType.RANDOM, QueryType.RANGE,
                                 QueryType.TEXT, QueryType.KNN,
@@ -41,23 +41,32 @@ public class SimpleIndex extends MemoryIndex {
     }
 
     public SimpleIndex() {
-        idx = new ArrayList<AbstractObject>();
+        idx = new ArrayList<E>();
+    }
+
+
+    @Override
+    public boolean insert(E entry) {
+        return idx.add(entry);
     }
 
     @Override
-    public boolean insertObject(AbstractObject obj) {
-        idx.add(obj);
-        return true;
+    public boolean remove(E entry) {
+        return idx.remove(entry);
     }
 
     @Override
-    public boolean removeObject(AbstractObject obj) {
-        idx.remove(obj);
-        return true;
+    public int size() {
+        return idx.size();
     }
 
     @Override
-    public boolean contains(AbstractObject object){
+    public E get(int i) {
+        return idx.get(i);
+    }
+
+    @Override
+    public boolean contains(E object){
         if (idx.contains(object)){
             return true;
         }
@@ -65,7 +74,7 @@ public class SimpleIndex extends MemoryIndex {
     }
 
     @Override
-    public List<AbstractObject> getAllObjects() {
+    public List<E> getAll() {
         return idx;
     }
 
@@ -105,7 +114,7 @@ public class SimpleIndex extends MemoryIndex {
     private ResultSet performRandomQuery() {
         ArrayList<Result> res = new ArrayList<Result>();
         Random r = new Random();
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < r.nextInt(idx.size()); i++) {
             int position = r.nextInt(idx.size());
             res.add(new Result(idx.get(position)));
         }
@@ -120,13 +129,13 @@ public class SimpleIndex extends MemoryIndex {
         double range = q.getRange();
         AbstractObject obj = q.getQueryObject();
 
-        for (AbstractObject o: idx){
+        for (E o: idx){
             //TO DO - must check if the object is in range.
 //            if (obj.inRange(o, range)){
 //                res.add(new Result(o));
 //            }
         }
-        results.setResults(res);
+        results.addAll(res);
 
         return results;
     }

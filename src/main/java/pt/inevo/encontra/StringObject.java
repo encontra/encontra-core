@@ -1,33 +1,26 @@
 package pt.inevo.encontra;
 
-import pt.inevo.encontra.index.AbstractObject;
+import pt.inevo.encontra.storage.IEntry;
+import pt.inevo.encontra.storage.StorableObject;
 
 /**
  * String object just for testing
  * @author ricardo
  */
-public class StringObject extends AbstractObject<String, Long> {
+public class StringObject extends StorableObject<Long,String,String>{
 
+    private static long counter=0;
     protected String str;
 
+    public StringObject(){
+       this("");
+    }
+    
     public StringObject(String s) {
-        super(s, (long) s.length());
+        super(counter++, s);
         this.str = s;
     }
 
-    /**
-     * @return the str
-     */
-    public String getStr() {
-        return str;
-    }
-
-    /**
-     * @param str the str to set
-     */
-    public void setStr(String str) {
-        this.str = str;
-    }
 
     @Override
     public String toString() {
@@ -38,7 +31,7 @@ public class StringObject extends AbstractObject<String, Long> {
     public boolean equals(Object obj) {
         if (obj instanceof StringObject) {
             StringObject o = (StringObject) obj;
-            return str.equals(o.getStr());
+            return str.equals(o.getValue());
         }
         return false;
     }
@@ -48,5 +41,15 @@ public class StringObject extends AbstractObject<String, Long> {
         int hash = 7;
         hash = 67 * hash + (this.str != null ? this.str.hashCode() : 0);
         return hash;
+    }
+
+    @Override
+    public String getValue() {
+        return str;
+    }
+
+    @Override
+    public void setValue(String str) {
+       this.str=str;
     }
 }

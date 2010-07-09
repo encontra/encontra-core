@@ -1,31 +1,40 @@
 package pt.inevo.encontra.engine;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import pt.inevo.encontra.index.IndexEntry;
+import pt.inevo.encontra.index.Result;
+import pt.inevo.encontra.query.QueryCombiner;
 import pt.inevo.encontra.query.SimpleQueryCombiner;
 import pt.inevo.encontra.index.Index;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.storage.IEntry;
+import pt.inevo.encontra.storage.ObjectStorage;
+import pt.inevo.encontra.storage.SimpleObjectStorage;
+import pt.inevo.encontra.storage.StorableObject;
 
 /**
  * A generic and simple engine that uses a SimpleQueryCombiner to combine
  * the results of the queries realized to it.
  * @author ricardo
  */
-public class SimpleEngine extends Engine {
+public class SimpleEngine<O extends StorableObject> extends Engine<O> {
 
     public SimpleEngine() {
-        combiner = new SimpleQueryCombiner();
+        super();
     }
 
     @Override
-    public ResultSet search(Query query) {
+    public ResultSet<O> search(Query query) {
 
         List<ResultSet> results = new ArrayList<ResultSet>();
         //sends the query to all the indexes that support that query type
         for (Index idx : indexes) {
             if (idx.supportsQueryType(query.getType())) { //if supports type then make the query
-                results.add(idx.search(query));
+                results.add(getObjectResults(idx,idx.search(query)));
             }
         }
 
@@ -33,7 +42,7 @@ public class SimpleEngine extends Engine {
     }
 
     @Override
-    public ResultSet search(Query[] queries) {
+    public ResultSet<O> search(Query[] queries) {
 
         List<ResultSet> results = new ArrayList<ResultSet>();
 
@@ -47,4 +56,6 @@ public class SimpleEngine extends Engine {
 
         return combiner.combine(results);
     }
+
+
 }

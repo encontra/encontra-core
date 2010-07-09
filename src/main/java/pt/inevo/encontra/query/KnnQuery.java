@@ -1,6 +1,6 @@
 package pt.inevo.encontra.query;
 
-import pt.inevo.encontra.index.AbstractObject;
+import pt.inevo.encontra.descriptors.Descriptor;
 
 /**
  * K neighrest neighbor Query - Retrieve the K most similar elements
@@ -8,13 +8,13 @@ import pt.inevo.encontra.index.AbstractObject;
  */
 public class KnnQuery extends Query {
 
-    protected AbstractObject queryObject;
+    protected Object query;
     protected int knn;
 
     public KnnQuery(){}
 
-    public KnnQuery(AbstractObject queryObject, int k){
-        this.queryObject = queryObject;
+    public KnnQuery(Object query, int k){
+        this.query = query;
         this.knn = k;
         super.type = QueryType.KNN;
     }
@@ -23,16 +23,16 @@ public class KnnQuery extends Query {
      * Obtains the object to be used as query
      * @return the query object of the KNNQuery
      */
-    public AbstractObject getQueryObject() {
-        return queryObject;
+    public Object getQuery() {
+        return query;
     }
 
     /**
      * Sets the object do be used as the query for KNN algorithm
      * @param queryObject the object to be used as query
      */
-    public void setQueryObject(AbstractObject queryObject) {
-        this.queryObject = queryObject;
+    public void setQuery(Object queryObject) {
+        this.query = queryObject;
     }
 
     /**

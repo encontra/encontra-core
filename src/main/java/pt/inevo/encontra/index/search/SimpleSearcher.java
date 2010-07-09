@@ -3,10 +3,16 @@
  * and open the template in the editor.
  */
 
-package pt.inevo.encontra.index;
+package pt.inevo.encontra.index.search;
 
 
-import pt.inevo.encontra.descriptors.EncontraDescriptor;
+import pt.inevo.encontra.common.distance.HasDistance;
+import pt.inevo.encontra.descriptors.Descriptor;
+import pt.inevo.encontra.index.Index;
+import pt.inevo.encontra.index.IndexEntry;
+import pt.inevo.encontra.index.Result;
+import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.query.Query;
 
 
 import java.io.IOException;
@@ -16,42 +22,22 @@ import java.util.List;
 /**
  *
  */
-public class SimpleSearcher<O extends AbstractObject,D extends EncontraDescriptor<O>> {
+public class SimpleSearcher<E extends IndexEntry> extends MultiIndexSearcher<E>{
     private int maxHits = 10;
 
-    private ResultSet results; // Todo use a set to avoid duplicates!
+    private ResultSet<E> results; // Todo use a set to avoid duplicates!
 
-    Class<O> objectClass;
-    D _descriptor;
-    
-    public SimpleSearcher(Class<O> clazz,D descriptor,int maxHits) {
+    public SimpleSearcher(int maxHits) {
         this.maxHits = maxHits;
-        this.objectClass=clazz;
-        _descriptor=descriptor;
-    }
-
-    protected O newAbstractObject(){
-        O o=null;
-        try {
-            o=objectClass.newInstance();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return o;
     }
 
 
-    public ResultSet search(Object object, Index reader) throws IOException {
-        O query=newAbstractObject();
-        query.setObject(object);
-        _descriptor.extract(query);
 
-        float maxDistance = findSimilar(reader, _descriptor);
-        results = new ResultSet();
-        results
-        return new ResultSet(this.results, maxDistance);
+    public ResultSet search(HasDistance query, Index reader) throws IOException {
+        double maxDistance = findSimilar(reader, query);
+        results.normalizeScores(maxDistance);
+        results.invertScores(); // This is a distance and we need similarity
+        return results;
     }
 
     /**
@@ -60,7 +46,7 @@ public class SimpleSearcher<O extends AbstractObject,D extends EncontraDescripto
      * @return the maximum distance found for normalizing.
      * @throws java.io.IOException
      */
-    private float findSimilar(Index reader, D  descriptor) throws IOException {
+    private double findSimilar(Index<E> reader, HasDistance  descriptor) throws IOException {
         double maxDistance = -1f, overallMaxDistance = -1f;
 
         // clear result set ...
@@ -68,10 +54,8 @@ public class SimpleSearcher<O extends AbstractObject,D extends EncontraDescripto
 
         int docs = reader.size();
         for (int i = 0; i < docs; i++) {
-
-            D objDescriptor = (D) reader.get(i);
-            O object=newAbstractObject();
-            object.setId(objDescriptor.getId());
+            E entry=reader.get(i);
+            HasDistance objDescriptor = (HasDistance) entry.getValue();
             double distance = objDescriptor.getDistance(descriptor);
             // calculate the overall max distance to normalize score afterwards
             if (overallMaxDistance < distance) {
@@ -83,17 +67,21 @@ public class SimpleSearcher<O extends AbstractObject,D extends EncontraDescripto
             }
             // if the array is not full yet:
             if (results.size() < maxHits) {
-
-                results.add(new Result(e.getValue()));
+                Result<E> result=new Result<E>(entry);
+                result.setSimilarity(distance); // TODO - This is distance not similarity!!!
+                results.add(result);
                 if (distance > maxDistance) maxDistance = distance;
             } else if (distance < maxDistance) {
                 // if it is nearer to the sample than at least on of the current set:
                 // remove the last one ...
-                results.remove(results.last());
+                results.remove(results.size()-1);
                 // add the new one ...
-                results.add(new Result(distance, d));
+                Result<E> result=new Result<E>(entry);
+                result.setSimilarity(distance); // TODO - This is distance not similarity!!!
+
+                results.add(result);
                 // and set our new distance border ...
-                maxDistance = results.last().getDistance();
+                maxDistance = results.get(results.size()-1).getSimilarity();
             }
         }
         return maxDistance;
@@ -174,4 +162,26 @@ public class SimpleSearcher<O extends AbstractObject,D extends EncontraDescripto
 //        return new SimpleImageDuplicates(results);
 //    }
 
+    @Override
+    public ResultSet<E> search(Query query) {
+        ResultSet results = new ArrayList<ResultSet>();
+        //sends the query to all the indexes that support that query type
+        for (Index idx : indexes) {
+
+        }
+    }
+
+
+    @Override
+    public ResultSet<E> search(Index idx, Query query) {
+        if (idx.supportsQueryType(query.getType())) { //if supports type then make the query
+            return idx.search(query);
+        }
+        return null;
+    }
+
+    @Override
+    public ResultSet<E> search(Index idx, Query[] queries) {
+        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }
