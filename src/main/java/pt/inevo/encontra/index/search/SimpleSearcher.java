@@ -121,7 +121,7 @@ public class SimpleSearcher<O extends IndexedObject> extends AbstractSearcher<O>
             }
         }
         results.normalizeScores();
-        results.invertScores(); // This is a distance and we need similarity
+        results.invertScores(); // This is a distance (dissimilarity) and we need similarity
         return results;
     }
 
