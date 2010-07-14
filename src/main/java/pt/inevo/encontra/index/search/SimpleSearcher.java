@@ -6,57 +6,93 @@
 package pt.inevo.encontra.index.search;
 
 
-import pt.inevo.encontra.common.distance.HasDistance;
 import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.index.Index;
-import pt.inevo.encontra.index.IndexEntry;
+import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.query.Query.QueryType;
+import pt.inevo.encontra.storage.IEntity;
+import pt.inevo.encontra.storage.IEntry;
 
+import java.io.Serializable;
+import java.util.Random;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  */
-public class SimpleSearcher<E extends IndexEntry> extends MultiIndexSearcher<E>{
-    private int maxHits = 10;
+public class SimpleSearcher<O extends IndexedObject> extends AbstractSearcher<O>{
 
-    private ResultSet<E> results; // Todo use a set to avoid duplicates!
+    DescriptorExtractor extractor;
 
-    public SimpleSearcher(int maxHits) {
-        this.maxHits = maxHits;
+    public void setDescriptorExtractor(DescriptorExtractor extractor) {
+        this.extractor=extractor;
+    }
+
+    public DescriptorExtractor getDescriptorExtractor() {
+        return extractor;
+    }
+
+    @Override
+    public boolean insert(O entry) {
+        assert (entry != null);
+        Descriptor descriptor=extractor.extract(entry);
+        return index.insert(descriptor);
+    }
+
+    @Override
+    public QueryType[] getSupportedQueryTypes() {
+        return new QueryType[]{QueryType.KNN, Query.QueryType.RANDOM};
+    }
+
+    @Override
+    public boolean supportsQueryType(QueryType type) {
+        if (type.equals(QueryType.KNN) || type.equals(QueryType.RANDOM)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public ResultSet<O> search(Query query) {
+        ResultSet<IEntry> results = null;
+        if (supportsQueryType(query.getType())) {
+            if (query.getType().equals(Query.QueryType.KNN)){
+                KnnQuery q = (KnnQuery) query;
+                results = performKnnQuery(getDescriptorExtractor().extract((IndexedObject)q.getQuery()),q.getKnn());
+            } else if (query.getType().equals(Query.QueryType.RANDOM)){
+                results = performRandomQuery(query);
+            }
+        }
+
+        return getResultObjects(results);
+    }
+
+    private ResultSet<IEntry> performRandomQuery(Query query){
+
+        Random r = new Random();
+        int numDocs = index.size();
+
+        Descriptor d = index.get(r.nextInt(numDocs));
+        return performKnnQuery(d,r.nextInt(10));
+
     }
 
 
+    private ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits){
+        double overallMaxDistance = 0.0;
+        double maxDistance = Double.NEGATIVE_INFINITY;
 
-    public ResultSet search(HasDistance query, Index reader) throws IOException {
-        double maxDistance = findSimilar(reader, query);
-        results.normalizeScores(maxDistance);
-        results.invertScores(); // This is a distance and we need similarity
-        return results;
-    }
+        ResultSet results = new ResultSet<Descriptor>();
 
-    /**
-     * @param reader
-     * @param descriptor
-     * @return the maximum distance found for normalizing.
-     * @throws java.io.IOException
-     */
-    private double findSimilar(Index<E> reader, HasDistance  descriptor) throws IOException {
-        double maxDistance = -1f, overallMaxDistance = -1f;
-
-        // clear result set ...
-        results.clear();
-
-        int docs = reader.size();
+        int docs = index.size();
         for (int i = 0; i < docs; i++) {
-            E entry=reader.get(i);
-            HasDistance objDescriptor = (HasDistance) entry.getValue();
-            double distance = objDescriptor.getDistance(descriptor);
+            Descriptor o=index.get(i);
+
+            double distance = d.getDistance(o);
             // calculate the overall max distance to normalize score afterwards
             if (overallMaxDistance < distance) {
                 overallMaxDistance = distance;
@@ -67,7 +103,7 @@ public class SimpleSearcher<E extends IndexEntry> extends MultiIndexSearcher<E>{
             }
             // if the array is not full yet:
             if (results.size() < maxHits) {
-                Result<E> result=new Result<E>(entry);
+                Result<Descriptor> result=new Result<Descriptor>(o);
                 result.setSimilarity(distance); // TODO - This is distance not similarity!!!
                 results.add(result);
                 if (distance > maxDistance) maxDistance = distance;
@@ -76,7 +112,7 @@ public class SimpleSearcher<E extends IndexEntry> extends MultiIndexSearcher<E>{
                 // remove the last one ...
                 results.remove(results.size()-1);
                 // add the new one ...
-                Result<E> result=new Result<E>(entry);
+                Result<Descriptor> result=new Result<Descriptor>(o);
                 result.setSimilarity(distance); // TODO - This is distance not similarity!!!
 
                 results.add(result);
@@ -84,8 +120,12 @@ public class SimpleSearcher<E extends IndexEntry> extends MultiIndexSearcher<E>{
                 maxDistance = results.get(results.size()-1).getSimilarity();
             }
         }
-        return maxDistance;
+        results.normalizeScores();
+        results.invertScores(); // This is a distance and we need similarity
+        return results;
     }
+
+
 
 
 
@@ -163,25 +203,8 @@ public class SimpleSearcher<E extends IndexEntry> extends MultiIndexSearcher<E>{
 //    }
 
     @Override
-    public ResultSet<E> search(Query query) {
-        ResultSet results = new ArrayList<ResultSet>();
-        //sends the query to all the indexes that support that query type
-        for (Index idx : indexes) {
-
-        }
+    protected Result<O> getResultObject(Result<IEntry> indexEntryresult){
+        return new Result<O>((O)getDescriptorExtractor().getIndexedObject((Descriptor)indexEntryresult.getResult()));
     }
 
-
-    @Override
-    public ResultSet<E> search(Index idx, Query query) {
-        if (idx.supportsQueryType(query.getType())) { //if supports type then make the query
-            return idx.search(query);
-        }
-        return null;
-    }
-
-    @Override
-    public ResultSet<E> search(Index idx, Query[] queries) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 }

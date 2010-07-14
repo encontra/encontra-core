@@ -1,4 +1,6 @@
-package pt.inevo.encontra.query;
+package pt.inevo.encontra.query.criteria;
+
+import pt.inevo.encontra.query.Query;
 
 /**
  * Criteria Query - Query for combining Criteria

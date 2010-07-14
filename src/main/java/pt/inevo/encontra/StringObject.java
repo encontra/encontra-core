@@ -1,5 +1,6 @@
 package pt.inevo.encontra;
 
+import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.storage.IEntry;
 import pt.inevo.encontra.storage.StorableObject;
 
@@ -7,7 +8,7 @@ import pt.inevo.encontra.storage.StorableObject;
  * String object just for testing
  * @author ricardo
  */
-public class StringObject extends StorableObject<Long,String,String>{
+public class StringObject extends IndexedObject<Long,String> {
 
     private static long counter=0;
     protected String str;
@@ -43,13 +44,4 @@ public class StringObject extends StorableObject<Long,String,String>{
         return hash;
     }
 
-    @Override
-    public String getValue() {
-        return str;
-    }
-
-    @Override
-    public void setValue(String str) {
-       this.str=str;
-    }
 }

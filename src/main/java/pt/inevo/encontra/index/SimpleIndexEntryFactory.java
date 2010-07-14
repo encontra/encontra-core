@@ -1,20 +1,28 @@
 package pt.inevo.encontra.index;
 
-import pt.inevo.encontra.storage.StorableObject;
+import pt.inevo.encontra.descriptors.Descriptor;
+import pt.inevo.encontra.descriptors.SimpleDescriptor;
+import pt.inevo.encontra.storage.IEntry;
 
 
-public class SimpleIndexEntryFactory<O extends StorableObject> implements IndexEntryFactory<O,IndexEntry>{
+public class SimpleIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O,IndexEntry>{
+
+    public SimpleIndexEntryFactory(Class objectClass){
+        super(SimpleIndexEntry.class, objectClass);
+    }
 
     @Override
-    public IndexEntry createIndexEntry(O object) {
-        SimpleIndexEntry<O> entry = new SimpleIndexEntry<O>();
+    IndexEntry setupIndexEntry(O object, IndexEntry entry) {
         entry.setKey(object.getId());
         entry.setValue(object.getValue());
         return entry;
     }
 
     @Override
-    public Object getObjectId(IndexEntry entry) {
-        return entry.getKey();
+    O setupObject(IndexEntry entry, O object) {
+        object.setId(entry.getKey());
+        object.setValue(entry.getValue());
+        return object;
     }
+
 }

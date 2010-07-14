@@ -1,6 +1,6 @@
 package pt.inevo.encontra.query;
 
-import pt.inevo.encontra.index.AbstractObject;
+import pt.inevo.encontra.index.IndexedObject;
 
 /**
  * Range Query. Given a query (seed point) performs a range query using the
@@ -9,12 +9,12 @@ import pt.inevo.encontra.index.AbstractObject;
  */
 public class RangeQuery extends Query {
 
-    protected AbstractObject queryObject;
+    protected IndexedObject queryObject;
     protected double range;
 
     public RangeQuery(){}
 
-    public RangeQuery(AbstractObject query, double range){
+    public RangeQuery(IndexedObject query, double range){
         this.queryObject = query;
         this.range = range;
         super.type = QueryType.RANGE;
@@ -24,7 +24,7 @@ public class RangeQuery extends Query {
      * Obtains the object used as seed (query) to the range query
      * @return the queryObject
      */
-    public AbstractObject getQueryObject() {
+    public IndexedObject getQueryObject() {
         return queryObject;
     }
 
@@ -32,7 +32,7 @@ public class RangeQuery extends Query {
      * Sets the seed of the Range Query
      * @param queryObject the query object of the RangeQuery
      */
-    public void setQueryObject(AbstractObject queryObject) {
+    public void setQueryObject(IndexedObject queryObject) {
         this.queryObject = queryObject;
     }
 

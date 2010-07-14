@@ -1,13 +1,11 @@
 package pt.inevo.encontra.storage;
 
-import pt.inevo.encontra.index.AbstractObject;
-
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 
-public abstract class GenericEntryStorage<I extends Serializable,E extends IEntry<I,?>>implements EntryStorage<I,E>{
+public abstract class GenericEntryStorage<I extends Serializable,E extends IEntity<I>>implements EntityStorage<I,E>{
     Class<E> clazz;
     /**
      * Default constructor. Use for extend this class.

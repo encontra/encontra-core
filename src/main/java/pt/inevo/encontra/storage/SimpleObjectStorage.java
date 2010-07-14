@@ -1,14 +1,20 @@
 package pt.inevo.encontra.storage;
 
 
+import pt.inevo.encontra.index.IndexedObject;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
-public class SimpleObjectStorage<ID extends Serializable,V extends Serializable,O extends StorableObject<ID, ?, V>> extends GenericEntryStorage<ID,O> implements ObjectStorage<ID,O> {
-    private Map<ID,V> map=new HashMap<ID,V>();
+public class SimpleObjectStorage<ID extends Number,O extends IEntity<ID>> extends GenericEntryStorage<ID,O> implements ObjectStorage<ID,O> {
+
+    private static int counter=0;
+    
+    private Map<ID,O> map=new HashMap<ID,O>();
 
     public SimpleObjectStorage(Class<O> clazz) {
         super(clazz);
@@ -16,25 +22,16 @@ public class SimpleObjectStorage<ID extends Serializable,V extends Serializable,
 
     @Override
     public O get(ID id) {
-        O object=newEntryValue();
-        object.setId(id);
-        object.setValue(map.get(id));
-        return object;
+        return map.get(id);
     }
 
-    @Override
-    public List<O> get(ID... ids) {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 
     @Override
-    public List<O> getAll() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public void save(O obj) {
-        map.put(obj.getId(),obj.getValue());
+    public O save(O obj) {
+        if(obj.getId()==null)
+            obj.setId((ID) new Long(++counter));
+        map.put(obj.getId(),obj);
+        return obj;
     }
 
     @Override
@@ -43,7 +40,7 @@ public class SimpleObjectStorage<ID extends Serializable,V extends Serializable,
     }
 
     @Override
-    public void delete(ID id) {
+    public void delete(O object) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

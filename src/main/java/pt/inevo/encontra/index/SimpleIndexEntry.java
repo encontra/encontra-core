@@ -1,21 +1,22 @@
 package pt.inevo.encontra.index;
 
-import pt.inevo.encontra.storage.IEntry;
+import java.io.Serializable;
 
-public class SimpleIndexEntry<O extends IEntry> implements IndexEntry {
-    private Object key;
+
+public class SimpleIndexEntry implements IndexEntry {
+    private Serializable key;
     private Object value;
     
     public SimpleIndexEntry(){
     }
 
     @Override
-    public Object getKey() {
+    public Serializable getKey() {
         return key;
     }
 
     @Override
-    public void setKey(Object key) {
+    public void setKey(Serializable key) {
         this.key=key;
     }
 
