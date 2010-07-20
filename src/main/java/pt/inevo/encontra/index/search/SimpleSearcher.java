@@ -24,7 +24,7 @@ import java.util.Random;
 /**
  *
  */
-public class SimpleSearcher<O extends IndexedObject> extends AbstractSearcher<O>{
+public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O>{
 
     DescriptorExtractor extractor;
 
