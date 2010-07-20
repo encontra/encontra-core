@@ -1,9 +1,6 @@
 package pt.inevo.encontra.index;
 
-import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.storage.IEntry;
-
 
 public class SimpleIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O,IndexEntry>{
 

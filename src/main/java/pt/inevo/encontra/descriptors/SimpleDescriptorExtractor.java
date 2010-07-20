@@ -17,6 +17,7 @@ public class SimpleDescriptorExtractor extends DescriptorExtractor<IndexedObject
         return descriptor;
     }
 
+    @Override
     protected IndexedObject setupIndexedObject(SimpleDescriptor descriptor, IndexedObject object){
         object.setId(descriptor.getId());
         object.setValue(descriptor.getValue());
