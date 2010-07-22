@@ -62,7 +62,8 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O>{
         if (supportsQueryType(query.getType())) {
             if (query.getType().equals(Query.QueryType.KNN)){
                 KnnQuery q = (KnnQuery) query;
-                results = performKnnQuery(getDescriptorExtractor().extract((IndexedObject)q.getQuery()),q.getKnn());
+                Descriptor d=getDescriptorExtractor().extract((IndexedObject)q.getQuery());
+                results = performKnnQuery(d,q.getKnn());
             } else if (query.getType().equals(Query.QueryType.RANDOM)){
                 results = performRandomQuery(query);
             }
