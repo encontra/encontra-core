@@ -5,7 +5,7 @@ import java.io.Serializable;
 
 public class SimpleIndexEntry implements IndexEntry {
     private Serializable key;
-    private Object value;
+    private Serializable value;
     
     public SimpleIndexEntry(){
     }
@@ -21,13 +21,13 @@ public class SimpleIndexEntry implements IndexEntry {
     }
 
     @Override
-    public Object getValue() {
+    public Serializable getValue() {
         return value;
     }
 
     @Override
-    public void setValue(Object o) {
-       this.value=o;
+    public void setValue(Serializable o) {
+        this.value=o;
     }
 
 }

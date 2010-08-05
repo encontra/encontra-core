@@ -3,11 +3,7 @@ package pt.inevo.encontra.index;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import pt.inevo.encontra.descriptors.Key;
-import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.Query.QueryType;
-import pt.inevo.encontra.query.RangeQuery;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -18,14 +14,15 @@ import pt.inevo.encontra.storage.IEntry;
 public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
 
     protected ArrayList<IndexEntry> idx;
+    protected int iterator;
     protected static QueryType [] supportedTypes  =
             new QueryType[]{QueryType.RANDOM, QueryType.RANGE,
                                 QueryType.TEXT, QueryType.KNN,
                                 QueryType.BOOLEAN};
 
-
     public SimpleIndex(Class objectClass) {
         idx = new ArrayList<IndexEntry>();
+        iterator = 0;
         this.setEntryFactory(new SimpleIndexEntryFactory(objectClass));
     }
 
@@ -46,11 +43,6 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
     }
 
     @Override
-    public E get(int i) {
-        return (E) getEntryFactory().getObject(idx.get(i));
-    }
-
-    @Override
     public boolean contains(E object){
         if (idx.contains(object)){
             return true;
@@ -67,7 +59,59 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
         return list;
     }
 
+    @Override
+    public E getFirst() {
+        if (idx.size() > 0){
+            return (E)getEntryFactory().getObject(idx.get(0));
+        }
+        return null;
+    }
 
+    @Override
+    public E getLast() {
+        if (idx.size() > 0){
+            return (E)getEntryFactory().getObject(idx.get(idx.size()));
+        }
+        return null;
+    }
+
+    @Override
+    public void begin() {
+        iterator = 0;
+    }
+
+    @Override
+    public void end() {
+        iterator = idx.size();
+    }
+
+    @Override
+    public E getNext() {
+        if (iterator < idx.size() && idx.size() > 0){
+            return (E)getEntryFactory().getObject(idx.get(iterator++));
+        }
+        return null;
+    }
+
+    @Override
+    public E getPrevious() {
+        if (iterator > 0 && idx.size() > 0){
+            return (E)getEntryFactory().getObject(idx.get(iterator--));
+        }
+        return null;
+    }
+    
+        @Override
+    public boolean hasNext() {
+        if (iterator < idx.size()) return true;
+        else return false;
+    }
+
+    @Override
+    public boolean hasPrevious() {
+        if (iterator > 0) return true;
+        else return false;
+    }
 
     @Override
     public IEntity get(Serializable id) {

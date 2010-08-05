@@ -2,7 +2,6 @@ package pt.inevo.encontra.descriptors;
 
 import pt.inevo.encontra.index.IndexedObject;
 
-
 public class SimpleDescriptorExtractor extends DescriptorExtractor<IndexedObject,SimpleDescriptor> {
 
     public SimpleDescriptorExtractor(Class descriptorClass){

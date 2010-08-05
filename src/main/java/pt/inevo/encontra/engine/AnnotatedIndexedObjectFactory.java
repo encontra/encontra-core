@@ -16,6 +16,7 @@ import java.util.List;
 
 public abstract class AnnotatedIndexedObjectFactory implements IndexedObjectFactory {
 
+    @Override
     public List<IndexedObject> processBean(IEntity bean) throws IndexingException {
         List<IndexedField> fields=new ArrayList<IndexedField>();
         // iterate through fields

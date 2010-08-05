@@ -4,7 +4,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.Serializable;
 
-
 public class SimpleDescriptor implements Descriptor{
 
     private Serializable id;
@@ -25,10 +24,12 @@ public class SimpleDescriptor implements Descriptor{
         this.value=(String)o;
     }
 
+    @Override
     public Serializable getId() {
         return id;
     }
 
+    @Override
     public void setId(Serializable id) {
         this.id = id;
     }

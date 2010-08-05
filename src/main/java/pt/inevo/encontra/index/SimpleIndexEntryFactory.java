@@ -1,5 +1,6 @@
 package pt.inevo.encontra.index;
 
+import java.io.Serializable;
 import pt.inevo.encontra.storage.IEntry;
 
 public class SimpleIndexEntryFactory<O extends IEntry> extends IndexEntryFactory<O,IndexEntry>{
@@ -11,7 +12,7 @@ public class SimpleIndexEntryFactory<O extends IEntry> extends IndexEntryFactory
     @Override
     protected IndexEntry setupIndexEntry(O object, IndexEntry entry) {
         entry.setKey(object.getId());
-        entry.setValue(object.getValue());
+        entry.setValue((Serializable) object.getValue());
         return entry;
     }
 

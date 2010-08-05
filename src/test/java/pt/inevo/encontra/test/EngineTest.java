@@ -172,8 +172,8 @@ public class EngineTest extends TestCase {
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
 
-        searcher.add("title",titleSearcher);
-        searcher.add("content",contentSearcher);
+        searcher.addSearcher("title",titleSearcher);
+        searcher.addSearcher("content",contentSearcher);
 
         e.setSearcher(searcher);
 
