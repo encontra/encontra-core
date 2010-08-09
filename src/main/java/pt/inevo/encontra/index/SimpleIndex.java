@@ -44,7 +44,7 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
 
     @Override
     public boolean contains(E object){
-        if (idx.contains(object)){
+        if (idx.contains(getEntryFactory().createIndexEntry(object))){
             return true;
         }
         return false;
@@ -83,6 +83,29 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
     @Override
     public void end() {
         iterator = idx.size();
+    }
+
+    @Override
+    public boolean setCursor(E entry) {
+        IndexEntry iEntry = getEntryFactory().createIndexEntry(entry);
+        for (int i = 0; i < idx.size() ; i++){
+            if (idx.get(i).equals(iEntry)){
+                iterator = i;
+                return true;
+            }
+        }
+        //that entry was not found in the index
+        return false;
+    }
+
+    @Override
+    public E getEntry(Serializable key) {
+        for (IndexEntry entry: idx){
+            if (entry.getKey().equals(key))
+                return (E)getEntryFactory().getObject(entry);
+        }
+        //entry was not found, so return null
+        return null;
     }
 
     @Override
