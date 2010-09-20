@@ -13,7 +13,7 @@ public class CriteriaQueryTest extends TestCase {
             if (expr instanceof Similar) {
 	            Similar s=(Similar) expr;
                 assert(true);
-	        } else if (expr instanceof)
+	        }// else if (expr instanceof)
         }
     }
     @Override

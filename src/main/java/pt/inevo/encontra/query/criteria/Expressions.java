@@ -65,9 +65,9 @@ public class Expressions {
      * using the given ExpressionFactory.
      * Handles null expression.
      */
-     static Value toValue(ExpressionImpl<?> e, ExpressionFactory factory, CriteriaQueryImpl<?> q) {
-        return (e == null) ? factory.getNull() : e.toValue(factory, q);
-    }
+     //static Value toValue(ExpressionImpl<?> e, ExpressionFactory factory, CriteriaQueryImpl<?> q) {
+     //   return (e == null) ? factory.getNull() : e.toValue(factory, q);
+    //}
     
      /**
       * Return a list that is either empty (if the given list is null) or a list
