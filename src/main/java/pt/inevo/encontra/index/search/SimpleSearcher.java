@@ -34,6 +34,13 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
+    public boolean remove(O entry){
+        assert (entry != null);
+        Descriptor descriptor = extractor.extract(entry);
+        return index.remove(descriptor);
+    }
+
+    @Override
     public QueryType[] getSupportedQueryTypes() {
         return new QueryType[]{QueryType.KNN, Query.QueryType.RANDOM};
     }
