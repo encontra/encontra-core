@@ -1,11 +1,9 @@
 package pt.inevo.encontra;
 
 import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.storage.IEntry;
-import pt.inevo.encontra.storage.StorableObject;
 
 /**
- * String object just for testing
+ * String object just for testing.
  * @author ricardo
  */
 public class StringObject extends IndexedObject<Long,String> {
