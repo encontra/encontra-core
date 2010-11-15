@@ -1,5 +1,7 @@
 package pt.inevo.encontra.query.criteria.exps;
 
+import pt.inevo.encontra.query.criteria.Expression;
+import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import pt.inevo.encontra.query.criteria.*;
 
 public  class Not extends PredicateImpl {

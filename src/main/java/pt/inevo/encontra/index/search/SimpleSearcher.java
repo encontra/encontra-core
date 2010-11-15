@@ -2,17 +2,15 @@ package pt.inevo.encontra.index.search;
 
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.query.KnnQuery;
 import pt.inevo.encontra.query.Query;
-import pt.inevo.encontra.query.Query.QueryType;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
 /**
- *
+ * Simple searcher
  */
 public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
@@ -34,46 +32,21 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    public boolean remove(O entry){
+    public boolean remove(O entry) {
         assert (entry != null);
         Descriptor descriptor = extractor.extract(entry);
         return index.remove(descriptor);
     }
 
     @Override
-    public QueryType[] getSupportedQueryTypes() {
-        return new QueryType[]{QueryType.KNN, Query.QueryType.RANDOM};
-    }
-
-    @Override
-    public boolean supportsQueryType(QueryType type) {
-        if (type.equals(QueryType.KNN) || type.equals(QueryType.RANDOM)) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
     public ResultSet<O> search(Query query) {
         ResultSet<IEntry> results = new ResultSet<IEntry>();
-        if (supportsQueryType(query.getType())) {
-            if (query.getType().equals(Query.QueryType.KNN)) {
-                KnnQuery q = (KnnQuery) query;
-                Descriptor d = getDescriptorExtractor().extract((IndexedObject) q.getQuery());
-                results = performKnnQuery(d, q.getKnn());
-            } else if (query.getType().equals(Query.QueryType.RANDOM)) {
-                results = performRandomQuery();
-            }
-        }
+
+        KnnQuery q = (KnnQuery) query;
+        Descriptor d = getDescriptorExtractor().extract(q.getQueryObject());
+        results = performKnnQuery(d, q.getKnn());
 
         return getResultObjects(results);
-    }
-
-    private ResultSet<IEntry> performRandomQuery() {
-
-        Descriptor d = index.getFirst();
-        return performKnnQuery(d, 10);
-
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -82,7 +55,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         ResultSet results = new ResultSet<Descriptor>();
 
-        for ( ; index.hasNext() ; ){
+        for (; index.hasNext();) {
             Descriptor o = index.getNext();
 
             double distance = d.getDistance(o);

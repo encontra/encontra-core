@@ -1,6 +1,5 @@
 package pt.inevo.encontra.query.criteria;
 
-import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.criteria.exps.*;
 
 /**

@@ -25,6 +25,7 @@ public abstract class FunctionalExpression<X> extends ExpressionImpl<X> {
         }
     }
 
+    @Override
     public void acceptVisit(ExpressionVisitor visitor) {
         Expressions.acceptVisit(visitor, this, args);
     }

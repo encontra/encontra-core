@@ -19,7 +19,6 @@ public class ExpressionImpl<X> implements Expression<X> {
         _cls = cls;
     }
 
-
     /**
      * Gets the immutable type represented by this selection term.
      */
@@ -29,13 +28,13 @@ public class ExpressionImpl<X> implements Expression<X> {
 
     @Override
     public void acceptVisit(ExpressionVisitor visitor) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        Expressions.acceptVisit(visitor, this);
     }
 
     /**
      * Evaluate the expression for the given candidate.
      */
-    public final boolean evaluate(Object candidate, Object orig,Object[] params) {
+    public final boolean evaluate(Object candidate, Object orig, Object[] params) {
         try {
             return eval(candidate, candidate, params);
         } catch (ClassCastException cce) {
@@ -62,7 +61,7 @@ public class ExpressionImpl<X> implements Expression<X> {
      * Evaluate the expression for the given context candidate and original
      * candidate.
      */
-    protected boolean eval(Object candidate, Object orig,Object[] params) {
+    protected boolean eval(Object candidate, Object orig, Object[] params) {
         return true;
     }
 
@@ -71,5 +70,5 @@ public class ExpressionImpl<X> implements Expression<X> {
      */
     protected boolean eval(Collection candidates, Object[] params) {
         return true;
-	}
+    }
 }

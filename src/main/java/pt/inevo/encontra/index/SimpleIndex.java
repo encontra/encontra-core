@@ -3,7 +3,6 @@ package pt.inevo.encontra.index;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import pt.inevo.encontra.query.Query.QueryType;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -15,10 +14,6 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
 
     protected ArrayList<IndexEntry> idx;
     protected int iterator;
-    protected static QueryType [] supportedTypes  =
-            new QueryType[]{QueryType.RANDOM, QueryType.RANGE,
-                                QueryType.TEXT, QueryType.KNN,
-                                QueryType.BOOLEAN};
 
     public SimpleIndex(Class objectClass) {
         idx = new ArrayList<IndexEntry>();

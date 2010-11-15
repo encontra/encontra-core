@@ -1,5 +1,6 @@
 package pt.inevo.encontra.query.criteria.exps;
 
+import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import pt.inevo.encontra.query.criteria.*;
 
 public class IsNotNull extends PredicateImpl {

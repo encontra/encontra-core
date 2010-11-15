@@ -29,7 +29,7 @@ public class CriteriaExpressionBuilder {
      }
 
     protected void evalFilter(QueryExpressions exps, ExpressionFactory factory, CriteriaQueryImpl<?> q) {
-        PredicateImpl where = q.getRestriction();
+        PredicateImpl where = (PredicateImpl)q.getRestrictions();
 
         exps.filter = where;
     }

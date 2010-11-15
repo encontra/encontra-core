@@ -48,6 +48,10 @@ public class Path<X> extends ExpressionImpl<X> {
         return new Path<Y>(this, field, fieldClass);
     }
 
+    public String getAttributeName(){
+        return _field.getName();
+    }
+
      /**
      *  Return the parent "node" in the path or null if no parent.
      */

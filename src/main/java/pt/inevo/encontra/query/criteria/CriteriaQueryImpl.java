@@ -4,6 +4,7 @@ import pt.inevo.encontra.query.criteria.exps.And;
 
 import java.util.ArrayList;
 import java.util.List;
+import pt.inevo.encontra.query.Query;
 
 /**
  * Criteria query implementation.
@@ -15,7 +16,7 @@ import java.util.List;
  *
  * based on openjpa-persistence/src/main/java/org/apache/openjpa/persistence/criteria/CriteriaQueryImpl.java
  */
-public class CriteriaQueryImpl<T> implements CriteriaQuery<T>{
+public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
     private final Class<T>  _resultClass;
     private PredicateImpl _where;
     private boolean  _distinct;
@@ -28,11 +29,13 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>{
     /**
      * Sets whether this query as distinct.
      */
+    @Override
     public CriteriaQuery<T> distinct(boolean distinct) {
         _distinct = distinct;
         return this;
     }
 
+    @Override
     public CriteriaQuery<T> where(Expression<Boolean> restriction) {
         if (restriction == null) {
             _where = null;
@@ -42,6 +45,7 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>{
         return this;
     }
 
+    @Override
     public CriteriaQuery<T> where(Predicate... restrictions) {
         if (restrictions == null) {
             _where = null;
@@ -51,6 +55,7 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>{
         return this;
     }
 
+    @Override
     public CriteriaQuery<T> orderBy(Order... orders) {
         if (orders == null) {
             _orders = null;
@@ -73,10 +78,17 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>{
         return Expressions.returnCopy(_orders);
     }
     
-    public PredicateImpl getRestriction() {
+    @Override
+    public Expression<Boolean> getRestriction() {
         return _where;
     }
 
+    @Override
+    public Predicate getRestrictions(){
+        return _where;
+    }
+
+    @Override
     public Class<T> getResultType() {
         return _resultClass;
     }
@@ -94,6 +106,7 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>{
      * @param <X>
      * @return
      */
+    @Override
     public <X> Path<X> from(Class<X> cls) {
         return  new Path<X>(cls);
     }
