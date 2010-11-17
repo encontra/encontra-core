@@ -1,9 +1,9 @@
 package pt.inevo.encontra.query.criteria.exps;
 
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.query.criteria.ExpressionImpl;
+import pt.inevo.encontra.query.ExpressionImpl;
 import pt.inevo.encontra.query.criteria.ExpressionVisitor;
-import pt.inevo.encontra.query.criteria.Expressions;
+import pt.inevo.encontra.query.Expressions;
 
 /**
  * Functional Expression applies a function on a list of input Expressions.

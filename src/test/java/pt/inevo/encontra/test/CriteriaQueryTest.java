@@ -1,5 +1,7 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.query.Path;
+import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import junit.framework.TestCase;

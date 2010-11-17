@@ -1,5 +1,8 @@
 package pt.inevo.encontra.query.criteria;
 
+import pt.inevo.encontra.query.Expressions;
+import pt.inevo.encontra.query.ExpressionImpl;
+import pt.inevo.encontra.query.Predicate;
 import pt.inevo.encontra.query.criteria.exps.Not;
 
 import java.util.ArrayList;

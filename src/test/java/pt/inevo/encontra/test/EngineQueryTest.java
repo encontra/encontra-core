@@ -12,9 +12,9 @@ import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
-import pt.inevo.encontra.query.criteria.CriteriaQuery;
+import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.query.criteria.Path;
+import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.criteria.exps.And;
 import pt.inevo.encontra.storage.*;
 
@@ -25,6 +25,7 @@ import pt.inevo.encontra.storage.*;
  */
 public class EngineQueryTest extends TestCase {
 
+    //Example of a simple descriptor for test purposes
     public static class TestDescriptor extends SimpleDescriptor {
 
         public TestDescriptor() {
@@ -89,7 +90,7 @@ public class EngineQueryTest extends TestCase {
     }
 
     public EngineQueryTest(String testName) {
-        super(testName);
+       super(testName);
     }
 
     @Override
@@ -116,12 +117,12 @@ public class EngineQueryTest extends TestCase {
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
 
         //Creating the searchers
-        //A searcher for the "title"
+        //A performQuery for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
 
-        //A searcher for the "content"
+        //A performQuery for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));

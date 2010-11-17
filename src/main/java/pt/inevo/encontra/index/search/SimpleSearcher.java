@@ -1,11 +1,15 @@
 package pt.inevo.encontra.index.search;
 
+import java.util.Stack;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
-import pt.inevo.encontra.query.KnnQuery;
+import pt.inevo.encontra.query.QueryParserNode;
 import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -15,6 +19,10 @@ import pt.inevo.encontra.storage.IEntry;
 public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     protected DescriptorExtractor extractor;
+
+    public SimpleSearcher() {
+        queryProcessor = new QueryProcessorDefaultImpl();
+    }
 
     public void setDescriptorExtractor(DescriptorExtractor extractor) {
         this.extractor = extractor;
@@ -42,9 +50,20 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     public ResultSet<O> search(Query query) {
         ResultSet<IEntry> results = new ResultSet<IEntry>();
 
-        KnnQuery q = (KnnQuery) query;
-        Descriptor d = getDescriptorExtractor().extract(q.getQueryObject());
-        results = performKnnQuery(d, q.getKnn());
+        if (query instanceof CriteriaQuery) {
+            
+            CriteriaQuery q = (CriteriaQuery) query;
+            if (q.getRestriction().getClass().equals(Similar.class)) {
+                Stack<QueryParserNode> nodes = queryProcessor.getQueryParser().parse(query);
+                //can only process simple queries: similar, equals, etc.
+                if (nodes.firstElement().predicateType.equals(Similar.class)) {
+                    Descriptor d = getDescriptorExtractor().extract(nodes.firstElement().fieldObject);
+                    results = performKnnQuery(d, 10);
+                }
+            } else {
+                return queryProcessor.search(query);
+            }
+        }
 
         return getResultObjects(results);
     }

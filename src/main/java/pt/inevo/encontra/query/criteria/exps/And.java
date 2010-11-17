@@ -2,7 +2,7 @@ package pt.inevo.encontra.query.criteria.exps;
 
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.criteria.ExpressionVisitor;
-import pt.inevo.encontra.query.criteria.Predicate;
+import pt.inevo.encontra.query.Predicate;
 import pt.inevo.encontra.query.criteria.PredicateImpl;
 
 import java.util.Collection;

@@ -1,5 +1,7 @@
 package pt.inevo.encontra.query.criteria;
 
+import pt.inevo.encontra.query.ExpressionImpl;
+import pt.inevo.encontra.query.Order;
 import pt.inevo.encontra.query.criteria.exps.ExpressionFactory;
 import pt.inevo.encontra.query.criteria.exps.QueryExpressions;
 import pt.inevo.encontra.query.criteria.exps.Value;

@@ -1,9 +1,14 @@
 package pt.inevo.encontra.query.criteria;
 
+import pt.inevo.encontra.query.Expressions;
+import pt.inevo.encontra.query.Order;
+import pt.inevo.encontra.query.Predicate;
+import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.exps.And;
 
 import java.util.ArrayList;
 import java.util.List;
+import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.Query;
 
 /**
@@ -108,6 +113,6 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
      */
     @Override
     public <X> Path<X> from(Class<X> cls) {
-        return  new Path<X>(cls);
+        return new Path<X>(cls);
     }
 }
