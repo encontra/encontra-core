@@ -61,7 +61,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                     results = performKnnQuery(d, 10);
                 }
             } else {
-                return queryProcessor.search(query);
+                return getResultObjects(queryProcessor.search(query));
             }
         }
 

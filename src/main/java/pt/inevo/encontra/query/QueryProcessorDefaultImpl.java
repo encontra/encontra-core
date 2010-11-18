@@ -20,6 +20,7 @@ public class QueryProcessorDefaultImpl<E extends IndexedObject> extends QueryPro
 
     protected Class resultClass;
     protected Iterator<QueryParserNode> it;
+    protected QueryCombiner combiner;
 
     public QueryProcessorDefaultImpl() {
         super();

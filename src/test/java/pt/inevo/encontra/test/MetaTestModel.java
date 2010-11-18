@@ -3,13 +3,13 @@ package pt.inevo.encontra.test;
 import pt.inevo.encontra.index.annotation.Indexed;
 import pt.inevo.encontra.storage.IEntity;
 
-public class TestModel implements IEntity<Long> {
+public class MetaTestModel implements IEntity<Long> {
 
     private Long id;
     private String title;
     private String content;
 
-    public TestModel(String title, String content) {
+    public MetaTestModel(String title, String content) {
         this.title = title;
         this.content = content;
     }

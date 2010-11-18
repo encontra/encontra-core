@@ -22,7 +22,7 @@ import pt.inevo.encontra.storage.*;
  * objects in it.
  * @author ricardo
  */
-public class EngineQueryTest extends TestCase {
+public class EngineQueryTestModel extends TestCase {
 
     //Example of a simple descriptor for test purposes
     public static class TestDescriptor extends SimpleDescriptor {
@@ -88,7 +88,7 @@ public class EngineQueryTest extends TestCase {
         }
     }
 
-    public EngineQueryTest(String testName) {
+    public EngineQueryTestModel(String testName) {
        super(testName);
     }
 
@@ -116,12 +116,12 @@ public class EngineQueryTest extends TestCase {
         e.setQueryProcessor(new QueryProcessorDefaultImpl());
 
         //Creating the searchers
-        //A searcher for the "title"
+        //A performQuery for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
 
-        //A searcher for the "content"
+        //A performQuery for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
@@ -130,7 +130,7 @@ public class EngineQueryTest extends TestCase {
         e.getQueryProcessor().setSearcher("title", titleSearcher);
         e.getQueryProcessor().setSearcher("content", contentSearcher);
 
-        //Inserting some elements into the engine (indexes)
+        //Inserting some elements into the engine
         e.insert(new MetaTestModel("aaa", "bbb"));
         e.insert(new MetaTestModel("aab", "bba"));
         e.insert(new MetaTestModel("aba", "bab"));
@@ -144,17 +144,12 @@ public class EngineQueryTest extends TestCase {
         CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
-        //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghakçjflçs");
-        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+        Expression<Boolean> similarityClause = cb.similar(model, new MetaTestModel("title", "content"));
 
-        //Create the Query
-        CriteriaQuery query = cb.createQuery().where(
-                cb.and(titleSimilarityClause, contentSimilarityClause));
+        //Create the Query;
+        CriteriaQuery query = cb.createQuery().where(similarityClause);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = e.search(query);

@@ -39,6 +39,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
             if (!subqueries.empty()) {
                 Path p = (Path) expr;
                 String fieldName = p.getAttributeName();
+                //TO DO - if it is not an attribute, must set the object class
                 QueryParserNode lastNode = subqueries.lastElement();
                 lastNode.field = fieldName;
             }

@@ -33,12 +33,12 @@ public class CriteriaQueryTest extends TestCase {
 
     public void testCriteriaQuery() {
         CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
-        CriteriaQuery<TestModel> criteriaQuery = cb.createQuery(TestModel.class); //
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class); //
 
         // Path acts as a meta model using reflection
-        Path<TestModel> model = criteriaQuery.from(TestModel.class);
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
 
-        Expression<Boolean> where1 = cb.similar(model, new TestModel("Teste", "aaaa"));
+        Expression<Boolean> where1 = cb.similar(model, new MetaTestModel("Teste", "aaaa"));
 
         Expression<Boolean> where2 = cb.and(
                 cb.equal(model.get("title"), "Teste"),
