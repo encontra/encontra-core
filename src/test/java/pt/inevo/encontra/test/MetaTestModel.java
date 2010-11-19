@@ -44,7 +44,7 @@ public class MetaTestModel implements IEntity<Long> {
 
     @Override
     public String toString() {
-        return "TestModel{"
+        return "MetaTestModel{"
                 + "id=" + id
                 + ", title='" + title + '\''
                 + ", content='" + content + '\''

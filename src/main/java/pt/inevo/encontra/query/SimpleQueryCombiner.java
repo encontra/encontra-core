@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.storage.IEntity;
 
 /**
  * The simplest Query results combiner. It just takes a group of ResulSet's
  * and combines the results that appear in all of them.
  * @author ricardo
  */
-public class SimpleQueryCombiner implements QueryCombiner {
+public class SimpleQueryCombiner<E extends IEntity> implements QueryCombiner<E> {
 
     @Override
-    public ResultSet combine(List<ResultSet> results) {
+    public ResultSet<E> combine(List<ResultSet<E>> results) {
 
         boolean first = true;
         ResultSet combinedResultSet = new ResultSet(), set1 = null, set2 = null;

@@ -4,9 +4,8 @@ import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
-import pt.inevo.encontra.engine.SimpleEngine;
-import pt.inevo.encontra.engine.Engine;
 import junit.framework.TestCase;
+import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
@@ -110,10 +109,10 @@ public class EngineQueryTest extends TestCase {
         EntityStorage storage = new SimpleObjectStorage(MetaTestModel.class);
 
         //Creating the engine and setting its properties
-        Engine<MetaTestModel> e = new SimpleEngine<MetaTestModel>();
-        e.setObjectStorage(storage);
-        e.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
-        e.setQueryProcessor(new QueryProcessorDefaultImpl());
+        SimpleEngine<MetaTestModel> engine = new SimpleEngine<MetaTestModel>();
+        engine.setObjectStorage(storage);
+        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //Creating the searchers
         //A searcher for the "title"
@@ -127,18 +126,18 @@ public class EngineQueryTest extends TestCase {
         contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
 
         //setting the searchers
-        e.getQueryProcessor().setSearcher("title", titleSearcher);
-        e.getQueryProcessor().setSearcher("content", contentSearcher);
+        engine.getQueryProcessor().setSearcher("title", titleSearcher);
+        engine.getQueryProcessor().setSearcher("content", contentSearcher);
 
         //Inserting some elements into the engine (indexes)
-        e.insert(new MetaTestModel("aaa", "bbb"));
-        e.insert(new MetaTestModel("aab", "bba"));
-        e.insert(new MetaTestModel("aba", "bab"));
-        e.insert(new MetaTestModel("abb", "baa"));
-        e.insert(new MetaTestModel("baa", "abb"));
-        e.insert(new MetaTestModel("bab", "aba"));
-        e.insert(new MetaTestModel("bba", "aab"));
-        e.insert(new MetaTestModel("bbb", "aaa"));
+        engine.insert(new MetaTestModel("aaa", "bbb"));
+        engine.insert(new MetaTestModel("aab", "bba"));
+        engine.insert(new MetaTestModel("aba", "bab"));
+        engine.insert(new MetaTestModel("abb", "baa"));
+        engine.insert(new MetaTestModel("baa", "abb"));
+        engine.insert(new MetaTestModel("bab", "aba"));
+        engine.insert(new MetaTestModel("bba", "aab"));
+        engine.insert(new MetaTestModel("bbb", "aaa"));
 
         //Creating a combined query for the results
         CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
@@ -157,7 +156,7 @@ public class EngineQueryTest extends TestCase {
                 cb.and(titleSimilarityClause, contentSimilarityClause));
 
         //Searching in the engine for the results
-        ResultSet<MetaTestModel> results = e.search(query);
+        ResultSet<MetaTestModel> results = engine.search(query);
 
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {

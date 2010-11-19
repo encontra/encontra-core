@@ -1,8 +1,6 @@
 package pt.inevo.encontra.query;
 
-import java.util.Iterator;
 import java.util.Stack;
-import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import pt.inevo.encontra.query.criteria.exps.And;
@@ -16,8 +14,8 @@ import pt.inevo.encontra.query.criteria.exps.Similar;
  */
 public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor implements QueryParser {
 
-    protected Stack<QueryParserNode> subqueries = new Stack<QueryParserNode>();
-    protected Iterator<QueryParserNode> it;
+    protected Stack<QueryParserNode> pile = new Stack<QueryParserNode>();
+    protected QueryParserNode currentTopNode = null;
 
     @Override
     public void enter(Expression expr) {
@@ -25,40 +23,78 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
             QueryParserNode and = new QueryParserNode();
             and.predicateType = And.class;
             and.predicate = expr;
-            subqueries.add(and);
+
+            //push the object into the stack
+            pile.push(and);
+
+            currentTopNode = and;
+
         } else if (expr instanceof Similar) {
             QueryParserNode similar = new QueryParserNode();
             similar.predicateType = Similar.class;
             similar.predicate = expr;
-            subqueries.add(similar);
+
+            if (currentTopNode != null) {
+                if (currentTopNode.predicateType.equals(And.class)) {
+                    currentTopNode.childrenNodes.add(similar);
+                } else {
+                    currentTopNode = pile.pop();
+                    currentTopNode.childrenNodes.add(similar);
+                    pile.push(currentTopNode);
+                }
+                
+            }
+
+            currentTopNode = similar;
+
         } else if (expr instanceof Constant) {
             Constant t = (Constant) expr;
-            QueryParserNode lastNode = subqueries.lastElement();
-            lastNode.fieldObject = new IndexedObject(null, t.arg);
+            QueryParserNode constantNode = new QueryParserNode();
+            constantNode.fieldObject = t.arg;
+            constantNode.predicate = t;
+            constantNode.predicateType = Constant.class;
+            constantNode.fieldObject = t.arg;
+
+            currentTopNode.fieldObject = t.arg;
+            currentTopNode.childrenNodes.add(constantNode);
+
         } else if (expr instanceof Path) {
-            if (!subqueries.empty()) {
-                Path p = (Path) expr;
+
+            Path p = (Path) expr;
+            QueryParserNode pathNode = new QueryParserNode();
+            pathNode.predicateType = Path.class;
+            pathNode.predicate = p;
+
+            if (p.isField()) {
                 String fieldName = p.getAttributeName();
-                //TO DO - if it is not an attribute, must set the object class
-                QueryParserNode lastNode = subqueries.lastElement();
-                lastNode.field = fieldName;
+                currentTopNode.field = fieldName;
             }
+
+            currentTopNode.childrenNodes.add(pathNode);
         } else if (expr instanceof Equal) {
-            //TO DO - implement here the equal operation parser
+            // TODO implement here the Equal parsing
         } else {
-            System.out.println(expr.toString());
             //don't know what else to do
+            System.out.println(expr.toString());
         }
     }
 
     @Override
-    public Stack<QueryParserNode> parse(Query query) {
+    public void exit(Expression expr) {
+        super.exit(expr);
+        if (expr instanceof And) {
+            currentTopNode = pile.pop();
+        }
+    }
+
+    @Override
+    public QueryParserNode parse(Query query) {
         if (query instanceof CriteriaQuery) {
-            CriteriaQuery q = (CriteriaQuery)query;
+            CriteriaQuery q = (CriteriaQuery) query;
             q.getRestriction().acceptVisit(this);
-            return subqueries;
+            return currentTopNode;
         }
 
-        return subqueries;
+        return currentTopNode;
     }
 }

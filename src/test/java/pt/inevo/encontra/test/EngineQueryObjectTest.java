@@ -21,7 +21,7 @@ import pt.inevo.encontra.storage.*;
  * objects in it.
  * @author ricardo
  */
-public class EngineQueryTestModel extends TestCase {
+public class EngineQueryObjectTest extends TestCase {
 
     //Example of a simple descriptor for test purposes
     public static class TestDescriptor extends SimpleDescriptor {
@@ -87,7 +87,7 @@ public class EngineQueryTestModel extends TestCase {
         }
     }
 
-    public EngineQueryTestModel(String testName) {
+    public EngineQueryObjectTest(String testName) {
         super(testName);
     }
 
@@ -106,75 +106,58 @@ public class EngineQueryTestModel extends TestCase {
         DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(TestDescriptor.class);
 
         //Creating the storage
-        EntityStorage storage = new SimpleObjectStorage(CompoundMetaTestModel.class);
+        EntityStorage storage = new SimpleObjectStorage(MetaTestModel.class);
 
         //Creating the engine and setting its properties
-        SimpleEngine<CompoundMetaTestModel> engine = new SimpleEngine<CompoundMetaTestModel>();
+        SimpleEngine<MetaTestModel> engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
-        //Creating the searchers - searchers for native fields (not complex here)
-        SimpleSearcher nameSeacher = new SimpleSearcher();
-        nameSeacher.setDescriptorExtractor(descriptorExtractor);
-        nameSeacher.setIndex(new SimpleIndex(TestDescriptor.class));
-
-        SimpleEngine<MetaTestModel> modelTestSearcher = new SimpleEngine<MetaTestModel>();
-        modelTestSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
-        modelTestSearcher.setObjectStorage(new SimpleObjectStorage(MetaTestModel.class));
-        modelTestSearcher.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
-        
-        //A performQuery for the "title"
+        //Creating the searchers
+        //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
 
-        //A performQuery for the "content"
+        //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
 
         //setting the searchers
-        modelTestSearcher.getQueryProcessor().setSearcher("title", titleSearcher);
-        modelTestSearcher.getQueryProcessor().setSearcher("content", contentSearcher);
+        engine.getQueryProcessor().setSearcher("title", titleSearcher);
+        engine.getQueryProcessor().setSearcher("content", contentSearcher);
 
-        engine.getQueryProcessor().setSearcher("name", nameSeacher);
-        engine.getQueryProcessor().setSearcher("testModel", modelTestSearcher);
-
-        //Inserting some elements into the engine
-        engine.insert(new CompoundMetaTestModel("name1", new MetaTestModel("aaa", "bbb")));
-        engine.insert(new CompoundMetaTestModel("name2", new MetaTestModel("aab", "bba")));
-        engine.insert(new CompoundMetaTestModel("name3", new MetaTestModel("aba", "bab")));
-        engine.insert(new CompoundMetaTestModel("name4", new MetaTestModel("abb", "baa")));
-        engine.insert(new CompoundMetaTestModel("name5", new MetaTestModel("baa", "abb")));
-        engine.insert(new CompoundMetaTestModel("name6", new MetaTestModel("bab", "aba")));
-        engine.insert(new CompoundMetaTestModel("name7", new MetaTestModel("bba", "aab")));
-        engine.insert(new CompoundMetaTestModel("name8", new MetaTestModel("bbb", "aaa")));
+        //Inserting some elements into the engine (indexes)
+        engine.insert(new MetaTestModel("aaa", "bbb"));
+        engine.insert(new MetaTestModel("aab", "bba"));
+        engine.insert(new MetaTestModel("aba", "bab"));
+        engine.insert(new MetaTestModel("abb", "baa"));
+        engine.insert(new MetaTestModel("baa", "abb"));
+        engine.insert(new MetaTestModel("bab", "aba"));
+        engine.insert(new MetaTestModel("bba", "aab"));
+        engine.insert(new MetaTestModel("bbb", "aaa"));
 
         //Creating a combined query for the results
         CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
-        Path<CompoundMetaTestModel> model = criteriaQuery.from(CompoundMetaTestModel.class);
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
 
-        // TODO must remove the setId call from here, because this is not corrent
-        MetaTestModel metaModelObject = new MetaTestModel("aaa", "bbb");
-        metaModelObject.setId(Long.MAX_VALUE);
-
-        // TODO must remove the setId call from here, because this is not corrent
-        CompoundMetaTestModel testObject = new CompoundMetaTestModel("name1", metaModelObject);
+        // TODO must remove this setID call to object
+        MetaTestModel testObject = new MetaTestModel("ghakçjflçs", "aaaa");
         testObject.setId(Long.MIN_VALUE);
 
-        Expression<Boolean> similarityClause = cb.similar(model, testObject);
-
-        //Create the Query;
-        CriteriaQuery query = cb.createQuery().where(similarityClause);
+        Expression<Boolean> similar = cb.similar(model, testObject);
+        CriteriaQuery query = cb.createQuery().where(similar);
 
         //Searching in the engine for the results
-        ResultSet<CompoundMetaTestModel> results = engine.search(query);
+        ResultSet<MetaTestModel> results = engine.search(query);
 
         System.out.println("Number of retrieved elements: " + results.size());
-        for (Result<CompoundMetaTestModel> r : results) {
+        for (Result<MetaTestModel> r : results) {
             System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
             System.out.println("Similarity: " + r.getSimilarity());
         }
