@@ -5,8 +5,6 @@ import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import pt.inevo.encontra.query.Predicate;
 import pt.inevo.encontra.query.criteria.PredicateImpl;
 
-import java.util.Collection;
-
 /**
  * Concrete AND predicate.
  *
@@ -34,13 +32,12 @@ public  class And extends PredicateImpl {
                 && _exp2.evaluate(candidates, ctx, params);
     }
     */
+    @Override
     public void acceptVisit(ExpressionVisitor visitor) {
         visitor.enter(this);
         for(Predicate p : _exps){
             p.acceptVisit(visitor);
         }
-        //_exp1.acceptVisit(visitor);
-        //_exp2.acceptVisit(visitor);
         visitor.exit(this);
     }
 }

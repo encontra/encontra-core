@@ -19,13 +19,12 @@ public class Or extends PredicateImpl {
         super(Predicate.BooleanOperator.OR, restrictions);
     }
 
+    @Override
     public void acceptVisit(ExpressionVisitor visitor) {
         visitor.enter(this);
         for(Predicate p : _exps){
             p.acceptVisit(visitor);
         }
-        //_exp1.acceptVisit(visitor);
-        //_exp2.acceptVisit(visitor);
         visitor.exit(this);
     }
 }

@@ -107,6 +107,9 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 maxDistance = results.get(results.size() - 1).getSimilarity();
             }
         }
+        //resets the entry provider for future calls
+        index.begin();
+
         results.normalizeScores();
         results.invertScores(); // This is a distance (dissimilarity) and we need similarity
         return results;
