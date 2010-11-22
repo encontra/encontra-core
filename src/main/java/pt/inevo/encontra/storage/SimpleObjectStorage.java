@@ -1,14 +1,7 @@
 package pt.inevo.encontra.storage;
 
-
-import pt.inevo.encontra.index.IndexedObject;
-
-import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 
 public class SimpleObjectStorage<ID extends Number,O extends IEntity<ID>> extends GenericEntryStorage<ID,O> implements ObjectStorage<ID,O> {
 
