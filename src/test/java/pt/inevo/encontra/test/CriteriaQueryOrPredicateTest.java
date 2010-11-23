@@ -148,7 +148,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghakçjflçs");
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "loremipsum");
         Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
 
         //Create the Query
@@ -159,7 +159,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         //Other queries
 
         // query 2
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjs", "ababa");
         m.setId(Long.MIN_VALUE);
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
