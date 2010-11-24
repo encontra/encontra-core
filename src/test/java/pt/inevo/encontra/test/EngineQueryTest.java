@@ -84,7 +84,7 @@ public class EngineQueryTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghakçjflçs");
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
         Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
 
         //Create the Query

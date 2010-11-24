@@ -89,7 +89,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghakçjflçs");
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "loremipsum");
         Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
 
         CriteriaQuery query = cb.createQuery().where(
@@ -133,7 +133,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
-
+        
         MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
         m.setId(Long.MIN_VALUE);
 

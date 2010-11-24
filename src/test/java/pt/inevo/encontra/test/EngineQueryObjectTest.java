@@ -83,7 +83,7 @@ public class EngineQueryObjectTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
 
         // TODO must remove this setID call to object
-        MetaTestModel testObject = new MetaTestModel("ghakçjflçs", "aaaa");
+        MetaTestModel testObject = new MetaTestModel("ghaksdfd", "aaaa");
         testObject.setId(Long.MIN_VALUE);
 
         Expression<Boolean> similar = cb.similar(model, testObject);
