@@ -1,5 +1,7 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.test.entities.ExampleDescriptor;
+import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
@@ -32,7 +34,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         //Creating a simple descriptor
-        DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(TestDescriptor.class);
+        DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
 
         //Creating the storage
         EntityStorage storage = new SimpleObjectStorage(MetaTestModel.class);
@@ -47,12 +49,12 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
-        titleSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
+        titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
-        contentSearcher.setIndex(new SimpleIndex(TestDescriptor.class));
+        contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -96,12 +98,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 contentSimilarityClause));
 
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        System.out.println("Number of retrieved elements: " + results.size());
-        for (Result<MetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
-        }
+        printResults(results);
     }
 
     @Test
@@ -124,12 +121,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.similar(model, m)));
 
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        System.out.println("Number of retrieved elements: " + results.size());
-        for (Result<MetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
-        }
+        printResults(results);
     }
 
     @Test
@@ -147,18 +139,13 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
 
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
-                    cb.or(
-                        cb.similar(titleModel, "aabbaa"),
-                        cb.similar(contentModel, "bbbabab")),
-                    cb.similar(model, m)));
+                cb.or(
+                cb.similar(titleModel, "aabbaa"),
+                cb.similar(contentModel, "bbbabab")),
+                cb.similar(model, m)));
 
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        System.out.println("Number of retrieved elements: " + results.size());
-        for (Result<MetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
-        }
+        printResults(results);
     }
 
     @Test
@@ -176,13 +163,17 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
 
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
-                    cb.and(
-                        cb.similar(titleModel, "aabbaa"),
-                        cb.similar(contentModel, "bbb")),
-                    cb.similar(model, m)));
+                cb.and(
+                cb.similar(titleModel, "aabbaa"),
+                cb.similar(contentModel, "bbb")),
+                cb.similar(model, m)));
 
         ResultSet<MetaTestModel> results = engine.search(query);
+        printResults(results);
+    }
 
+    //just print the results
+    private void printResults(ResultSet<MetaTestModel> results) {
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {
             System.out.print("Retrieved element: " + r.getResult().toString() + "\t");

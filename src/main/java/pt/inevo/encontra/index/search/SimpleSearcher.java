@@ -10,6 +10,7 @@ import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.exps.Equal;
+import pt.inevo.encontra.query.criteria.exps.NotEqual;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
@@ -52,22 +53,18 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
         ResultSet<IEntry> results = new ResultSet<IEntry>();
 
         if (query instanceof CriteriaQuery) {
-
-            CriteriaQuery q = (CriteriaQuery) query;
-            if (q.getRestriction().getClass().equals(Similar.class)) {
-                QueryParserNode nodes = queryProcessor.getQueryParser().parse(query);
-                //can only process simple queries: similar, equals, etc.
-                if (nodes.predicateType.equals(Similar.class)) {
-                    Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null,nodes.fieldObject));
-                    results = performKnnQuery(d, 10);
-                }
-            } else if (q.getRestriction().getClass().equals(Equal.class)) {
-                QueryParserNode nodes = queryProcessor.getQueryParser().parse(query);
-                //can only process simple queries: similar, equals, etc.
-                if (nodes.predicateType.equals(Equal.class)) {
-                    Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null,nodes.fieldObject));
-                    results = performEqualQuery(d);
-                }
+            //parse the query
+            QueryParserNode node = queryProcessor.getQueryParser().parse(query);
+            //make the query
+            if (node.predicateType.equals(Similar.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                results = performKnnQuery(d, 10);
+            } else if (node.predicateType.equals(Equal.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                results = performEqualQuery(d, true);
+            } else if (node.predicateType.equals(NotEqual.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                results = performEqualQuery(d, false);
             } else {
                 return getResultObjects(queryProcessor.search(query));
             }
@@ -123,7 +120,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
         return results;
     }
 
-    protected ResultSet<IEntry> performEqualQuery(Descriptor d) {
+    protected ResultSet<IEntry> performEqualQuery(Descriptor d, boolean equal) {
 
         ResultSet results = new ResultSet<Descriptor>();
 
@@ -132,11 +129,15 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
             double distance = d.getDistance(o);
             // calculate the overall max distance to normalize score afterwards
-            if (distance == 0) {
+            if (equal && distance == 0) {
                 Result<Descriptor> result = new Result<Descriptor>(o);
                 result.setSimilarity(distance);
                 results.add(result);
                 break;
+            } else if (!equal && distance != 0) {
+                Result<Descriptor> result = new Result<Descriptor>(o);
+                result.setSimilarity(distance);
+                results.add(result);
             }
         }
         //resets the entry provider for future calls

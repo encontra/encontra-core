@@ -1,4 +1,4 @@
-package pt.inevo.encontra.test;
+package pt.inevo.encontra.test.entities;
 
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
@@ -8,9 +8,9 @@ import pt.inevo.encontra.descriptors.SimpleDescriptor;
  * @author Ricardo
  */
 //Example of a simple descriptor for test purposes
-public class TestDescriptor extends SimpleDescriptor {
+public class ExampleDescriptor extends SimpleDescriptor {
 
-    public TestDescriptor() {
+    public ExampleDescriptor() {
         int i = 0;
     }
 

@@ -6,7 +6,6 @@ import pt.inevo.encontra.query.Predicate;
 import pt.inevo.encontra.query.criteria.exps.Not;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 

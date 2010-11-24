@@ -20,12 +20,12 @@ import pt.inevo.encontra.storage.*;
  * Testing the Equal expression, alone and combining it with AND and OR predicates.
  * @author ricardo
  */
-public class CriteriaQueryEqualTest extends TestCase {
+public class CriteriaQueryNotTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
     private CriteriaBuilderImpl cb;
 
-    public CriteriaQueryEqualTest(String testName) {
+    public CriteriaQueryNotTest(String testName) {
         super(testName);
     }
 
@@ -86,16 +86,15 @@ public class CriteriaQueryEqualTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
 
         //Create the Query
-        // query 1
         MetaTestModel m = new MetaTestModel("aaa", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m));
+        CriteriaQuery query = cb.createQuery().where(cb.not(cb.equal(model, m)));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //check if it returned one result
-        assertTrue(results.size() == 1);
+        assertTrue(results.size() == 7);
 
         printResults(results);
     }
@@ -110,13 +109,13 @@ public class CriteriaQueryEqualTest extends TestCase {
 
         MetaTestModel m = new MetaTestModel("aaaj", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m));
+        CriteriaQuery query = cb.createQuery().where(cb.not(cb.similar(model, m)));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return no results
-        assertTrue(results.isEmpty());
+        assertTrue(results.size() == 7);
 
         printResults(results);
     }
@@ -130,13 +129,13 @@ public class CriteriaQueryEqualTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
 
-        CriteriaQuery query = criteriaQuery.where(cb.equal(titleModel, "aaa"));
+        CriteriaQuery query = criteriaQuery.where(cb.not(cb.equal(titleModel, "aaa")));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return only one result
-        assertTrue(results.size() == 1);
+        assertTrue(results.size() == 7);
 
         printResults(results);
     }
@@ -153,14 +152,14 @@ public class CriteriaQueryEqualTest extends TestCase {
 
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
-                    cb.equal(titleModel, "aaa"),
+                    cb.not(cb.equal(titleModel, "aaa")),
                     cb.equal(contentModel, "bbb")));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //only one result because of the and condition
-        assertTrue(results.size() == 1);
+        assertTrue(results.isEmpty());
 
         printResults(results);
     }
@@ -176,15 +175,141 @@ public class CriteriaQueryEqualTest extends TestCase {
         Path<String> contentModel = model.get("content");
 
         CriteriaQuery query = cb.createQuery().where(
-                cb.or(
-                    cb.equal(titleModel, "aaa"),
+                cb.and(
+                    cb.not(cb.equal(titleModel, "aaa")),
                     cb.equal(contentModel, "bba")));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
+        //only one result because of the and condition
+        assertTrue(results.size() == 1);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test6() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        CriteriaQuery query = cb.createQuery().where(
+                cb.or(
+                    cb.equal(titleModel, "aaa"),
+                    cb.not(cb.equal(contentModel, "bba"))));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
         //should return two results because of the or condition
-        assertTrue(results.size() == 2);
+        assertTrue(results.size() == 7);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test7() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        //NotEqual(titleMode,"aaa") AND NotEqual(contentMode, "bba")
+        CriteriaQuery query = cb.createQuery().where(
+                cb.not(cb.or(
+                cb.equal(titleModel, "aaa"),
+                cb.equal(contentModel, "bba"))));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return two results because of the or condition
+        assertTrue(results.size() == 6);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test8() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
+        CriteriaQuery query = cb.createQuery().where(
+                cb.not(cb.and(
+                    cb.equal(titleModel, "aaa"),
+                    cb.equal(contentModel, "bba"))));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return two results because of the or condition
+        assertTrue(results.size() == 8);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test9() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(
+                    cb.not(cb.equal(titleModel, "aaa")),
+                    cb.not(cb.equal(contentModel, "bba"))));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return two results because of the or condition
+        assertTrue(results.size() == 6);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test10() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(
+                    cb.not(cb.equal(titleModel, "aaa")),
+                    cb.or(
+                        cb.equal(contentModel, "bba"))),
+                        cb.similar(titleModel, "absga"));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return two results because of the or condition
+        assertTrue(results.size() > 1);
 
         printResults(results);
     }

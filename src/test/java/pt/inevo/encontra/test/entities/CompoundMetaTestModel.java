@@ -1,4 +1,4 @@
-package pt.inevo.encontra.test;
+package pt.inevo.encontra.test.entities;
 
 import pt.inevo.encontra.index.annotation.Indexed;
 import pt.inevo.encontra.storage.IEntity;

@@ -1,5 +1,7 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.test.entities.CompoundMetaTestModel;
+import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
