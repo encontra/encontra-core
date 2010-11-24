@@ -64,7 +64,6 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
                     currentTopNode.childrenNodes.add(similar);
                     pile.push(currentTopNode);
                 }
-
             }
 
             currentTopNode = similar;
@@ -94,7 +93,25 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
 
             currentTopNode.childrenNodes.add(pathNode);
         } else if (expr instanceof Equal) {
-            // TODO implement here the Equal parsing
+
+            Equal eq = (Equal)expr;
+            QueryParserNode equalNode = new QueryParserNode();
+            equalNode.predicate = eq;
+            equalNode.predicateType = Equal.class;
+
+            if (currentTopNode != null) {
+                if (currentTopNode.predicateType.equals(And.class)
+                        || currentTopNode.predicateType.equals(Or.class)) {
+                    currentTopNode.childrenNodes.add(equalNode);
+                } else {
+                    currentTopNode = pile.pop();
+                    currentTopNode.childrenNodes.add(equalNode);
+                    pile.push(currentTopNode);
+                }
+            }
+
+            currentTopNode = equalNode;
+            
         } else {
             //don't know what else to do
             System.out.println(expr.toString());

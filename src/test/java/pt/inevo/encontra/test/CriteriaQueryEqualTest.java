@@ -11,20 +11,19 @@ import pt.inevo.encontra.index.*;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
-import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.storage.*;
 
 /**
- * Testing the OR predicate.
+ * Testing the Equal expression, alone and combining it with AND and OR predicates.
  * @author ricardo
  */
-public class CriteriaQueryOrPredicateTest extends TestCase {
+public class CriteriaQueryEqualTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
     private CriteriaBuilderImpl cb;
 
-    public CriteriaQueryOrPredicateTest(String testName) {
+    public CriteriaQueryEqualTest(String testName) {
         super(testName);
     }
 
@@ -81,21 +80,20 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
     public void test1() {
 
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghakçjflçs");
-        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+        //Create the Query
+        // query 1
+        MetaTestModel m = new MetaTestModel("aaa", "bbb");
+        m.setId(Long.MIN_VALUE);
+        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m));
 
-        CriteriaQuery query = cb.createQuery().where(
-                cb.or(
-                titleSimilarityClause,
-                contentSimilarityClause));
-
+        //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        //check if it returned one result
+        assertTrue(results.size() == 1);
 
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {
@@ -111,19 +109,16 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
 
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("aaaj", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(
-                cb.or(
-                cb.and(
-                cb.similar(titleModel, "aabbaa"),
-                cb.similar(contentModel, "bbbabab")),
-                cb.similar(model, m)));
+        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m));
 
+        //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return no results
+        assertTrue(results.isEmpty());
 
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {
@@ -140,19 +135,14 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
-        m.setId(Long.MIN_VALUE);
+        CriteriaQuery query = criteriaQuery.where(cb.equal(titleModel, "aaa"));
 
-        CriteriaQuery query = cb.createQuery().where(
-                cb.and(
-                    cb.or(
-                        cb.similar(titleModel, "aabbaa"),
-                        cb.similar(contentModel, "bbbabab")),
-                    cb.similar(model, m)));
-
+        //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return only one result
+        assertTrue(results.size() == 1);
 
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {
@@ -171,17 +161,44 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
-        m.setId(Long.MIN_VALUE);
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(
+                cb.equal(titleModel, "aaa"),
+                cb.equal(contentModel, "bbb")));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //only one result because of the and condition
+        assertTrue(results.size() == 1);
+
+        System.out.println("Number of retrieved elements: " + results.size());
+        for (Result<MetaTestModel> r : results) {
+            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
+            System.out.println("Similarity: " + r.getSimilarity());
+        }
+    }
+
+    @Test
+    public void test5() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
 
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
-                    cb.and(
-                        cb.similar(titleModel, "aabbaa"),
-                        cb.similar(contentModel, "bbb")),
-                    cb.similar(model, m)));
+                    cb.equal(titleModel, "aaa"),
+                    cb.equal(contentModel, "bba")));
 
+        //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return two results because of the or condition
+        assertTrue(results.size() == 2);
 
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {

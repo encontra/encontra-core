@@ -9,6 +9,7 @@ import pt.inevo.encontra.query.QueryParserNode;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.criteria.exps.Equal;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
@@ -60,6 +61,13 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                     Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null,nodes.fieldObject));
                     results = performKnnQuery(d, 10);
                 }
+            } else if (q.getRestriction().getClass().equals(Equal.class)) {
+                QueryParserNode nodes = queryProcessor.getQueryParser().parse(query);
+                //can only process simple queries: similar, equals, etc.
+                if (nodes.predicateType.equals(Equal.class)) {
+                    Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null,nodes.fieldObject));
+                    results = performEqualQuery(d);
+                }
             } else {
                 return getResultObjects(queryProcessor.search(query));
             }
@@ -105,6 +113,30 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 results.add(result);
                 // and set our new distance border ...
                 maxDistance = results.get(results.size() - 1).getSimilarity();
+            }
+        }
+        //resets the entry provider for future calls
+        index.begin();
+
+        results.normalizeScores();
+        results.invertScores(); // This is a distance (dissimilarity) and we need similarity
+        return results;
+    }
+
+    protected ResultSet<IEntry> performEqualQuery(Descriptor d) {
+
+        ResultSet results = new ResultSet<Descriptor>();
+
+        for (; index.hasNext();) {
+            Descriptor o = index.getNext();
+
+            double distance = d.getDistance(o);
+            // calculate the overall max distance to normalize score afterwards
+            if (distance == 0) {
+                Result<Descriptor> result = new Result<Descriptor>(o);
+                result.setSimilarity(distance);
+                results.add(result);
+                break;
             }
         }
         //resets the entry provider for future calls
