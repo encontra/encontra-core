@@ -9,7 +9,7 @@ import pt.inevo.encontra.query.criteria.PredicateImpl;
  * Concrete AND predicate.
  *
  */
-public  class And extends PredicateImpl {
+public class And extends PredicateImpl {
     public And(Expression<Boolean> x, Expression<Boolean> y) {
         super(Predicate.BooleanOperator.AND);
         add(x).add(y);

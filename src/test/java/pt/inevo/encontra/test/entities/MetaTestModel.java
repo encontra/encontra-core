@@ -3,6 +3,10 @@ package pt.inevo.encontra.test.entities;
 import pt.inevo.encontra.index.annotation.Indexed;
 import pt.inevo.encontra.storage.IEntity;
 
+/**
+ * Indexable fields are marked with the @Indexed annotation
+ * @author Ricardo
+ */
 public class MetaTestModel implements IEntity<Long> {
 
     private Long id;

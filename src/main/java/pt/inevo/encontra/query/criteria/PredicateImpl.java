@@ -98,11 +98,8 @@ abstract public class PredicateImpl extends ExpressionImpl<Boolean> implements P
         return this;
     }
 
-
     @Override
     public void acceptVisit(ExpressionVisitor visitor) {
         Expressions.acceptVisit(visitor, this, _exps.toArray(new Expression<?>[_exps.size()]));
     }
-
-
 }

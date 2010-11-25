@@ -10,10 +10,6 @@ import pt.inevo.encontra.descriptors.SimpleDescriptor;
 //Example of a simple descriptor for test purposes
 public class ExampleDescriptor extends SimpleDescriptor {
 
-    public ExampleDescriptor() {
-        int i = 0;
-    }
-
     @Override
     public double getDistance(Descriptor other) {
         return getLevenshteinDistance(getValue(), (String) other.getValue());

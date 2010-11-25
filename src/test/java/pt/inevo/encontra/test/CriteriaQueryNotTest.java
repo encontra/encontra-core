@@ -314,6 +314,28 @@ public class CriteriaQueryNotTest extends TestCase {
         printResults(results);
     }
 
+    @Test
+    public void test11() {
+        // TODO if we negate something that is already negate it should return the original
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+
+        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
+        CriteriaQuery query = cb.createQuery().where(
+                cb.not(cb.not(cb.equal(titleModel, "aaa"))));
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //should return two results because of the or condition
+//        assertTrue(results.size() == 1);
+
+        printResults(results);
+    }
+
     //just print the results to the standard output
     private void printResults(ResultSet<MetaTestModel> results) {
         System.out.println("Number of retrieved elements: " + results.size());

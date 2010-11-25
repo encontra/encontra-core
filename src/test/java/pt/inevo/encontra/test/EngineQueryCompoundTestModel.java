@@ -95,14 +95,14 @@ public class EngineQueryCompoundTestModel extends TestCase {
         Path<CompoundMetaTestModel> model = criteriaQuery.from(CompoundMetaTestModel.class);
 
         // test1
-        Path namePath = model.get("name");
-        Expression<Boolean> similarityClause = cb.similar(namePath, "name2");
+//        Path namePath = model.get("name");
+//        Expression<Boolean> similarityClause = cb.similar(namePath, "name2");
 
         // test2
-//        Path metaModelTitlePath = model.get("testModel");
-//        MetaTestModel t = new MetaTestModel("aaa", "bbb");
-//        t.setId(Long.MAX_VALUE);
-//        Expression<Boolean> similarityClause = cb.similar(metaModelTitlePath, t);
+        Path metaModelTitlePath = model.get("testModel");
+        MetaTestModel t = new MetaTestModel("aaa", "bbb");
+        t.setId(Long.MAX_VALUE);
+        Expression<Boolean> similarityClause = cb.similar(metaModelTitlePath, t);
 
         // test3
 //        Path<String> metaModelTitlePath = model.get("testModel").get("title");

@@ -98,6 +98,9 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 contentSimilarityClause));
 
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 8);
+
         printResults(results);
     }
 
@@ -121,6 +124,9 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.similar(model, m)));
 
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 8);
+
         printResults(results);
     }
 
@@ -145,6 +151,9 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.similar(model, m)));
 
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 8);
+
         printResults(results);
     }
 
@@ -169,6 +178,117 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.similar(model, m)));
 
         ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 8);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test5() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        m.setId(Long.MIN_VALUE);
+
+        CriteriaQuery query = cb.createQuery().where(
+                cb.or(
+                    cb.and(
+                        cb.equal(titleModel, "aabbaa"),
+                        cb.similar(contentModel, "bbb")),
+                    cb.similar(model, m)));
+
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 8);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test6() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        m.setId(Long.MIN_VALUE);
+
+        CriteriaQuery query = cb.createQuery().where(
+                cb.or(
+                    cb.and(
+                        cb.not(cb.equal(titleModel, "aaa")),
+                        cb.similar(contentModel, "bbb")),
+                    cb.equal(model, m)));
+
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 7);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test7() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        m.setId(Long.MIN_VALUE);
+
+        CriteriaQuery query = cb.createQuery().where(
+                cb.or(
+                    cb.and(
+                        cb.not(cb.equal(titleModel, "aaa")),
+                        cb.not(cb.equal(contentModel, "bba"))),
+                    cb.equal(model, m)));
+
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 6);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test8() {
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        m.setId(Long.MIN_VALUE);
+
+        CriteriaQuery query = cb.createQuery().where(
+                cb.not(cb.or(
+                    cb.and(
+                        cb.not(cb.equal(titleModel, "aaa")),
+                        cb.equal(contentModel, "bba")),
+                    cb.equal(model, m))));
+
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 6);
+
         printResults(results);
     }
 
