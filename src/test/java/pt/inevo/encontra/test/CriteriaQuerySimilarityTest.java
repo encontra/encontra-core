@@ -4,6 +4,7 @@ import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
+import org.junit.Test;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -21,23 +22,19 @@ import pt.inevo.encontra.test.entities.ExampleDescriptor;
  * objects in it.
  * @author ricardo
  */
-public class EngineQueryTest extends TestCase {
+public class CriteriaQuerySimilarityTest extends TestCase {
 
-    public EngineQueryTest(String testName) {
-       super(testName);
+    private SimpleEngine<MetaTestModel> engine;
+    private CriteriaBuilderImpl cb;
+
+    public CriteriaQuerySimilarityTest(String testName) {
+        super(testName);
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-    }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    public void testMain() {
         //Creating a simple descriptor
         DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
 
@@ -45,7 +42,7 @@ public class EngineQueryTest extends TestCase {
         EntityStorage storage = new SimpleObjectStorage(MetaTestModel.class);
 
         //Creating the engine and setting its properties
-        SimpleEngine<MetaTestModel> engine = new SimpleEngine<MetaTestModel>();
+        engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
@@ -76,7 +73,35 @@ public class EngineQueryTest extends TestCase {
         engine.insert(new MetaTestModel("bbb", "aaa"));
 
         //Creating a combined query for the results
-        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+        cb = new CriteriaBuilderImpl();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
+
+    @Test
+    public void test1() {
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+
+        // TODO must remove this setID call to object
+        MetaTestModel testObject = new MetaTestModel("ghaksdfd", "aaaa");
+        testObject.setId(Long.MIN_VALUE);
+
+        Expression<Boolean> similar = cb.similar(model, testObject);
+        CriteriaQuery query = cb.createQuery().where(similar);
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        //Searching in the engine for the results
+        printResults(results);
+    }
+
+    @Test
+    public void test2() {
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
@@ -94,6 +119,11 @@ public class EngineQueryTest extends TestCase {
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
+        printResults(results);
+    }
+
+    //prints the results
+    private void printResults(ResultSet<MetaTestModel> results) {
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<MetaTestModel> r : results) {
             System.out.print("Retrieved element: " + r.getResult().toString() + "\t");

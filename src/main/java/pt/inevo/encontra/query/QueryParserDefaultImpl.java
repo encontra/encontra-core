@@ -21,6 +21,7 @@ import pt.inevo.encontra.query.criteria.exps.Similar;
 public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor implements QueryParser {
 
     protected Stack<QueryParserNode> pile = new Stack<QueryParserNode>();
+    protected Stack<QueryParserNode> negatedPile = new Stack<QueryParserNode>();
     protected QueryParserNode currentTopNode;
     protected QueryParserNode negatedParentNode;
     protected Map<Class, Class> operatorsNegation = new HashMap<Class, Class>();
@@ -99,11 +100,15 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         if (expr instanceof And || expr instanceof Or) {
             if (!pile.empty()) {
                 currentTopNode = pile.pop();     //remove the node because it is no longer necessary
-                if (currentTopNode.equals(negatedParentNode)) {
-                    negatedParentNode = null;
+                
+                if (!negatedPile.isEmpty() && negatedPile.peek().equals(currentTopNode)) {
+                    negatedParentNode = currentTopNode;
                 }
                 if (!pile.empty()) {
                     currentTopNode = pile.peek();    //get the next element in the tree
+                    if (!negatedPile.isEmpty() && negatedPile.peek().equals(currentTopNode)) {
+                        negatedParentNode = currentTopNode;
+                    }
                 }
             }
         }
@@ -119,9 +124,13 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         QueryParserNode node = new QueryParserNode();
         PredicateImpl predicate = (PredicateImpl) expr;
 
-        if (predicate.isNegated() || negated) {
+        if (predicate.isNegated() || negated || negatedParentNode != null) {
             node.predicateType = operatorsNegation.get(expr.getClass());
             node.predicate = predicate.markNegated();
+            negatedPile.push(node);
+
+            negatedParentNode = node;
+            negated = false;
         } else {
             node.predicateType = expr.getClass();
             node.predicate = predicate;
@@ -136,11 +145,6 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         }
 
         currentTopNode = node;
-
-        if (negated || predicate.isNegated()) {
-            negatedParentNode = node;
-            negated = false;
-        }
     }
 
     /**

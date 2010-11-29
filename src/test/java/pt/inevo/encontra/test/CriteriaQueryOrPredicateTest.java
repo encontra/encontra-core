@@ -287,7 +287,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.size() == 6);
+        assertTrue(results.size() == 7);
 
         printResults(results);
     }

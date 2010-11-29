@@ -26,7 +26,7 @@ import pt.inevo.encontra.storage.IEntity;
  * Default implementation for the query processor.
  * @author Ricardo
  */
-public class QueryProcessorDefaultImpl<E extends IndexedObject> extends QueryProcessor<E> {
+public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor<E> {
 
     protected Class resultClass;
     ResultSetOperations combiner;
@@ -56,9 +56,9 @@ public class QueryProcessorDefaultImpl<E extends IndexedObject> extends QueryPro
                 resultsParts.add(process(n));
             }
             results = combiner.join(resultsParts);
-        } else if (node.predicateType.equals(Similar.class) || 
-                node.predicateType.equals(Equal.class) ||
-                node.predicateType.equals(NotEqual.class)) {
+        } else if (node.predicateType.equals(Similar.class)
+                || node.predicateType.equals(Equal.class)
+                || node.predicateType.equals(NotEqual.class)) {
 
             if (node.field != null) {
                 /*
@@ -97,7 +97,8 @@ public class QueryProcessorDefaultImpl<E extends IndexedObject> extends QueryPro
                     //in the end we must have the elements we desire
                     newQueryPath = newQueryPath.get(node.field);
                     try {
-                        Constructor c = node.predicateType.getConstructor(newQueryPath.getClass(), node.fieldObject.getClass());
+//                        Constructor c = node.predicateType.getConstructor(newQueryPath.getClass(), node.fieldObject.getClass());
+                        Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
                         CriteriaQuery newQuery = criteriaImpl.where((Expression) c.newInstance(newQueryPath, node.fieldObject));
                         return s.search(newQuery);
                     } catch (Exception ex) {
@@ -108,8 +109,17 @@ public class QueryProcessorDefaultImpl<E extends IndexedObject> extends QueryPro
                     Searcher s = searcherMap.get(node.field);
                     //creating a simpler CriteriaQuery only with Similar desired
                     CriteriaQueryImpl criteriaImpl = new CriteriaQueryImpl(resultClass);
-                    CriteriaQuery newQuery = criteriaImpl.where(node.predicate);
-                    results = s.search(newQuery);
+
+                    try {
+                        Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
+                        CriteriaQuery newQuery = criteriaImpl.where((Expression) c.newInstance(parentPath, node.fieldObject));
+                        results = s.search(newQuery);
+                    } catch (Exception ex) {
+                        System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
+                    }
+
+//                    CriteriaQuery newQuery = criteriaImpl.where(node.predicate);
+//                    results = s.search(newQuery);
                 }
             } else {
                 //dont know which searchers to use, so lets digg a bit
