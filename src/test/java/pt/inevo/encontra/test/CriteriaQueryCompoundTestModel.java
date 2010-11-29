@@ -285,6 +285,29 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         printResults(results);
     }
 
+    @Test
+    public void test7() {
+        System.out.println("Test7");
+
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+        Path<CompoundMetaTestModel> model = criteriaQuery.from(CompoundMetaTestModel.class);
+
+        Path<String> metaModelTitlePath = model.get("testModel").get("title");
+        Path<String> contentModelPath = model.get("testModel").get("content");
+        Expression<Boolean> equalClause = cb.not(cb.equal(metaModelTitlePath, "bab"));
+        Expression<Boolean> contentClause = cb.similar(contentModelPath, "aab");
+
+        //Create the Query;
+        CriteriaQuery query = cb.createQuery().where(cb.and(equalClause, contentClause)).distinct(true);
+
+        //Searching in the engine for the results
+        ResultSet<CompoundMetaTestModel> results = engine.search(query);
+
+        assertTrue(results.size() == 7);
+
+        printResults(results);
+    }
+
     private void printResults(ResultSet<CompoundMetaTestModel> results) {
         System.out.println("Number of retrieved elements: " + results.size());
         for (Result<CompoundMetaTestModel> r : results) {

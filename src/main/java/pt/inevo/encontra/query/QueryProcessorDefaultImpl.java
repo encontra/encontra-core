@@ -55,7 +55,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
             for (QueryParserNode n : nodes) {
                 resultsParts.add(process(n));
             }
-            results = combiner.join(resultsParts);
+            results = combiner.join(resultsParts, node.distinct);
         } else if (node.predicateType.equals(Similar.class)
                 || node.predicateType.equals(Equal.class)
                 || node.predicateType.equals(NotEqual.class)) {
@@ -97,9 +97,9 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                     //in the end we must have the elements we desire
                     newQueryPath = newQueryPath.get(node.field);
                     try {
-//                        Constructor c = node.predicateType.getConstructor(newQueryPath.getClass(), node.fieldObject.getClass());
                         Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
                         CriteriaQuery newQuery = criteriaImpl.where((Expression) c.newInstance(newQueryPath, node.fieldObject));
+                        newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
                         return s.search(newQuery);
                     } catch (Exception ex) {
                         System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
@@ -113,13 +113,11 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                     try {
                         Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
                         CriteriaQuery newQuery = criteriaImpl.where((Expression) c.newInstance(parentPath, node.fieldObject));
+                        newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
                         results = s.search(newQuery);
                     } catch (Exception ex) {
                         System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
                     }
-
-//                    CriteriaQuery newQuery = criteriaImpl.where(node.predicate);
-//                    results = s.search(newQuery);
                 }
             } else {
                 //dont know which searchers to use, so lets digg a bit
@@ -147,6 +145,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                         try {
                             Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
                             query = query.where((Expression) c.newInstance(subModelPath, obj.getValue()));
+                            query = ((CriteriaQueryImpl) query).distinct(node.distinct);
                             resultsParts.add(s.search(query));
 
                         } catch (Exception ex) {
@@ -161,6 +160,8 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                 }
             }
         }
+        
+        results.sort();
         return results;
     }
 }
@@ -207,14 +208,18 @@ class ResultSetOperations<E> {
      * @param results the list where to apply the OR operation
      * @return
      */
-    public ResultSet<E> join(List<ResultSet<E>> results) {
+    public ResultSet<E> join(List<ResultSet<E>> results, boolean distinct) {
 
         ResultSet combinedResultSet = new ResultSet();
         for (ResultSet set : results) {
             Iterator<Result> it = set.iterator();
             while (it.hasNext()) {
                 Result r = it.next();
-                if (!combinedResultSet.contains(r)) {
+                if (distinct) {
+                    if (!combinedResultSet.contains(r)) {
+                        combinedResultSet.add(r);
+                    }
+                } else {
                     combinedResultSet.add(r);
                 }
             }

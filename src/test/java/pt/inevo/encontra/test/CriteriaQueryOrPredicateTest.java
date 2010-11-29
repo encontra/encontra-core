@@ -95,7 +95,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
                 titleSimilarityClause,
-                contentSimilarityClause));
+                contentSimilarityClause)).distinct(true);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -121,7 +121,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.and(
                 cb.similar(titleModel, "aabbaa"),
                 cb.similar(contentModel, "bbbabab")),
-                cb.similar(model, m)));
+                cb.similar(model, m))).distinct(true);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -148,7 +148,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.or(
                 cb.similar(titleModel, "aabbaa"),
                 cb.similar(contentModel, "bbbabab")),
-                cb.similar(model, m)));
+                cb.similar(model, m))).distinct(true);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -175,7 +175,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.and(
                 cb.similar(titleModel, "aabbaa"),
                 cb.similar(contentModel, "bbb")),
-                cb.similar(model, m)));
+                cb.similar(model, m))).distinct(true);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -283,7 +283,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                     cb.and(
                         cb.not(cb.equal(titleModel, "aaa")),
                         cb.equal(contentModel, "bba")),
-                    cb.equal(model, m))));
+                    cb.equal(model, m)))).distinct(true);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 

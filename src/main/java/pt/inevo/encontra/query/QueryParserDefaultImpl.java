@@ -3,6 +3,7 @@ package pt.inevo.encontra.query;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import pt.inevo.encontra.query.criteria.PredicateImpl;
@@ -26,6 +27,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
     protected QueryParserNode negatedParentNode;
     protected Map<Class, Class> operatorsNegation = new HashMap<Class, Class>();
     protected boolean negated = false;
+    protected boolean distinct;
 
     public QueryParserDefaultImpl() {
         super();
@@ -40,7 +42,9 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
     public QueryParserNode parse(Query query) {
         if (query instanceof CriteriaQuery) {
             resetParser();
-            CriteriaQuery q = (CriteriaQuery) query;
+            CriteriaQueryImpl q = (CriteriaQueryImpl) query;
+            distinct = q.isDistinct();
+            
             q.getRestriction().acceptVisit(this);
             return currentTopNode;
         } else {
@@ -123,6 +127,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
 
         QueryParserNode node = new QueryParserNode();
         PredicateImpl predicate = (PredicateImpl) expr;
+        node.distinct = distinct;
 
         if (predicate.isNegated() || negated || negatedParentNode != null) {
             node.predicateType = operatorsNegation.get(expr.getClass());
@@ -157,6 +162,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         PredicateImpl predicate = (PredicateImpl) expr;
         node.predicateType = expr.getClass();
         node.predicate = expr;
+        node.distinct = distinct;
 
         if (currentTopNode != null) {
             if (currentTopNode.predicateType.equals(And.class)
@@ -191,5 +197,6 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         currentTopNode = null;
         negated = false;
         negatedParentNode = null;
+        distinct = false;
     }
 }

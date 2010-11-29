@@ -201,7 +201,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
                     cb.equal(titleModel, "aaa"),
-                    cb.not(cb.equal(contentModel, "bba"))));
+                    cb.not(cb.equal(contentModel, "bba")))).distinct(true);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -251,7 +251,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.not(cb.and(
                     cb.equal(titleModel, "aaa"),
-                    cb.equal(contentModel, "bba"))));
+                    cb.equal(contentModel, "bba")))).distinct(true);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

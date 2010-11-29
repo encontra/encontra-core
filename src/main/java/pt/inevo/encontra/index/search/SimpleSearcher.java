@@ -70,6 +70,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             }
         }
 
+        results.sort();
         return getResultObjects(results);
     }
 

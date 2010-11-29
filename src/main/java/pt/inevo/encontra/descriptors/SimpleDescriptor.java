@@ -1,7 +1,5 @@
 package pt.inevo.encontra.descriptors;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.io.Serializable;
 
 public class SimpleDescriptor implements Descriptor{
@@ -36,6 +34,6 @@ public class SimpleDescriptor implements Descriptor{
 
     @Override
     public double getDistance(Descriptor other) {
-       throw new NotImplementedException(); // TODO - This is an ugly hack
+       return 0;
     }
 }

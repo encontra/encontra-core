@@ -93,7 +93,7 @@ public class CriteriaQuerySimilarityTest extends TestCase {
         testObject.setId(Long.MIN_VALUE);
 
         Expression<Boolean> similar = cb.similar(model, testObject);
-        CriteriaQuery query = cb.createQuery().where(similar);
+        CriteriaQuery query = cb.createQuery().where(similar).distinct(true);
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //Searching in the engine for the results
@@ -102,6 +102,28 @@ public class CriteriaQuerySimilarityTest extends TestCase {
 
     @Test
     public void test2() {
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
+        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true);
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        printResults(results);
+    }
+
+    @Test
+    public void test3() {
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
