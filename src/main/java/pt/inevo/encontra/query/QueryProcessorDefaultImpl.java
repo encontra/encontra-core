@@ -72,7 +72,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                 Queue<Path> relativePaths = new LinkedList<Path>();
 
                 Path parentPath = p.getParentPath();
-                if (parentPath.isField()) {
+                if (parentPath.isField()) {     //its not a field of this processor
                     while (parentPath.isField()) {
                         relativePaths.add(parentPath);
                         parentPath = parentPath.getParentPath();
@@ -86,7 +86,6 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
 
                     String parentField = parentPath.getAttributeName();
                     Searcher s = searcherMap.get(parentField);
-                    CriteriaQueryImpl criteriaImpl = new CriteriaQueryImpl(resultClass);
                     Class clazz = parentPath.getJavaType();
                     Path newQueryPath = new Path(clazz);
 
@@ -96,28 +95,12 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
 
                     //in the end we must have the elements we desire
                     newQueryPath = newQueryPath.get(node.field);
-                    try {
-                        Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
-                        CriteriaQuery newQuery = criteriaImpl.where((Expression) c.newInstance(newQueryPath, node.fieldObject));
-                        newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
-                        return s.search(newQuery);
-                    } catch (Exception ex) {
-                        System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
-                    }
+                    return s.search(createSubQuery(node, newQueryPath, node.fieldObject));
+
                 } else {
                     //get the respective searcher
                     Searcher s = searcherMap.get(node.field);
-                    //creating a simpler CriteriaQuery only with Similar desired
-                    CriteriaQueryImpl criteriaImpl = new CriteriaQueryImpl(resultClass);
-
-                    try {
-                        Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
-                        CriteriaQuery newQuery = criteriaImpl.where((Expression) c.newInstance(parentPath, node.fieldObject));
-                        newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
-                        results = s.search(newQuery);
-                    } catch (Exception ex) {
-                        System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
-                    }
+                    results = s.search(createSubQuery(node, parentPath, node.fieldObject));
                 }
             } else {
                 //dont know which searchers to use, so lets digg a bit
@@ -133,7 +116,8 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                         CriteriaQuery query = cb.createQuery(obj.getValue().getClass());
                         Path subModelPath = null;
                         Class clazz = obj.getValue().getClass();
-                        if (!clazz.isPrimitive() && !clazz.getName().contains("String")) {
+                        //detect if the object is a compound one
+                        if (obj.getValue() instanceof IEntity || obj.getValue() instanceof IndexedObject) {
                             clazz = obj.getValue().getClass();
                             subModelPath = query.from(clazz);
                         } else {
@@ -142,15 +126,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                             subModelPath = subModelPath.get(fieldName);
                         }
 
-                        try {
-                            Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
-                            query = query.where((Expression) c.newInstance(subModelPath, obj.getValue()));
-                            query = ((CriteriaQueryImpl) query).distinct(node.distinct);
-                            resultsParts.add(s.search(query));
-
-                        } catch (Exception ex) {
-                            System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
-                        }
+                        resultsParts.add(s.search(createSubQuery(node, subModelPath, obj.getValue())));
                     }
 
                     results = combiner.intersect(resultsParts);
@@ -160,9 +136,24 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                 }
             }
         }
-        
+
         results.sort();
         return results;
+    }
+
+    //Create a subquery for Equal, Similar and NoEqual, given a node
+    private Query createSubQuery(QueryParserNode node, Path path, Object obj) {
+        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+        CriteriaQuery q = cb.createQuery(resultClass);
+        try {
+            Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
+            CriteriaQuery newQuery = q.where((Expression) c.newInstance(path, obj));
+            newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
+            return newQuery;
+        } catch (Exception ex) {
+            System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
+        }
+        return q;
     }
 }
 
