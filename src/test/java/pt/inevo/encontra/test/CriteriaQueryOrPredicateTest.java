@@ -114,7 +114,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
@@ -140,7 +140,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
         
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
 
         CriteriaQuery query = cb.createQuery().where(
@@ -167,7 +167,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
 
         CriteriaQuery query = cb.createQuery().where(
@@ -194,7 +194,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
 
         CriteriaQuery query = cb.createQuery().where(
@@ -221,7 +221,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
 
         CriteriaQuery query = cb.createQuery().where(
@@ -248,7 +248,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
 
         CriteriaQuery query = cb.createQuery().where(
@@ -275,7 +275,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("ghfjslça", "ababa");
+        MetaTestModel m = new MetaTestModel("ghfjsla", "ababa");
         m.setId(Long.MIN_VALUE);
 
         CriteriaQuery query = cb.createQuery().where(
