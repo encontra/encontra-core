@@ -14,6 +14,7 @@ import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
+import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.storage.*;
 
 /**
@@ -42,6 +43,7 @@ public class CriteriaQueryEqualTest extends TestCase {
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //Creating the searchers

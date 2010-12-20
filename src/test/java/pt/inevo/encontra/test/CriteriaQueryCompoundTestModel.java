@@ -18,6 +18,7 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -110,6 +111,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         engine = new SimpleEngine<CompoundMetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //Creating the searchers - searchers for native fields (not complex here)
@@ -294,6 +296,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
 
         Path<String> metaModelTitlePath = model.get("testModel").get("title");
         Path<String> contentModelPath = model.get("testModel").get("content");
+        
         Expression<Boolean> equalClause = cb.not(cb.equal(metaModelTitlePath, "bab"));
         Expression<Boolean> contentClause = cb.similar(contentModelPath, "aab");
 
