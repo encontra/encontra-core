@@ -2,6 +2,7 @@ package pt.inevo.encontra.index.search;
 
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
@@ -80,8 +81,10 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         ResultSet results = new ResultSet<Descriptor>();
 
-        for (; index.hasNext();) {
-            Descriptor o = index.getNext();
+        EntryProvider<Descriptor> provider = index.getEntryProvider();
+
+        for (; provider.hasNext();) {
+            Descriptor o = provider.getNext();
 
             double distance = d.getDistance(o);
             // calculate the overall max distance to normalize score afterwards
@@ -113,8 +116,6 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 maxDistance = results.get(results.size() - 1).getSimilarity();
             }
         }
-        //resets the entry provider for future calls
-        index.begin();
 
         results.normalizeScores();
         results.invertScores(); // This is a distance (dissimilarity) and we need similarity
@@ -125,8 +126,10 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         ResultSet results = new ResultSet<Descriptor>();
 
-        for (; index.hasNext();) {
-            Descriptor o = index.getNext();
+        EntryProvider<Descriptor> provider = index.getEntryProvider();
+
+        for (; provider.hasNext();) {
+            Descriptor o = provider.getNext();
 
             double distance = d.getDistance(o);
             // calculate the overall max distance to normalize score afterwards
@@ -141,8 +144,6 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 results.add(result);
             }
         }
-        //resets the entry provider for future calls
-        index.begin();
 
         results.normalizeScores();
         results.invertScores(); // This is a distance (dissimilarity) and we need similarity
