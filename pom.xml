@@ -25,5 +25,11 @@
             <artifactId>commons-beanutils</artifactId>
             <version>1.8.3</version>
         </dependency>
+
+        <dependency>
+            <groupId>se.scalablesolutions.akka</groupId>
+            <artifactId>akka-actor</artifactId>
+            <version>1.0-RC1</version>
+        </dependency>
     </dependencies>
 </project>

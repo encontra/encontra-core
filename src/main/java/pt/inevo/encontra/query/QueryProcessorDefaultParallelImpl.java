@@ -8,7 +8,6 @@ import akka.dispatch.Future;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +15,6 @@ import java.util.Queue;
 import pt.inevo.encontra.engine.QueryProcessor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.IndexingException;
-import pt.inevo.encontra.index.Result;
 import pt.inevo.encontra.index.ResultSet;
 import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
@@ -37,11 +35,11 @@ import scala.Option;
 public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryProcessor<E> {
 
     protected Class resultClass;
-    ResultSetParallelOperations combiner;
+    ResultSetOperations combiner;
 
     public QueryProcessorDefaultParallelImpl() {
         super();
-        combiner = new ResultSetParallelOperations();
+        combiner = new ResultSetOperations();
         queryParser = new QueryParserDefaultImpl();
     }
 
@@ -71,19 +69,19 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         }
     }
 
-    class AndParallelSearcherActor extends UntypedActor {
-
+    class BooleanSearcherActor extends UntypedActor {
         protected HashMap<String, ActorRef> searchActors;
         protected int numAnswers, possibleAnswers;
-        protected ResultSet andResults;
-        protected ResultSetParallelOperations combiner;
+        protected ResultSet results;
+        protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
+        protected QueryParserNode node;
 
-        public AndParallelSearcherActor(HashMap<String, ActorRef> actors) {
+        public BooleanSearcherActor(HashMap<String, ActorRef> actors) {
             this.searchActors = actors;
-            combiner = new ResultSetParallelOperations();
-            andResults = new ResultSet();
+            combiner = new ResultSetOperations();
+            results = new ResultSet();
         }
 
         @Override
@@ -95,7 +93,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                     originalActor = (ActorRef) getContext().getSender().get();
                 }
 
-                QueryParserNode node = (QueryParserNode) message;
+                node = (QueryParserNode) message;
                 List<QueryParserNode> nodes = node.childrenNodes;
                 possibleAnswers = nodes.size();
                 for (QueryParserNode n : nodes) {
@@ -112,26 +110,17 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                         }).start();
 
                         actorRef.sendOneWay(n, getContext());
-                    } else if (n.predicateType.equals(And.class)) {
+                    } else if (n.predicateType.equals(And.class) ||
+                            n.predicateType.equals(Or.class)) {
                         ActorRef andActorRef = UntypedActor.actorOf(new UntypedActorFactory() {
 
                             @Override
                             public UntypedActor create() {
-                                return new AndParallelSearcherActor(searchActors);
+                                return new BooleanSearcherActor(searchActors);
                             }
                         }).start();
 
                         andActorRef.sendOneWay(n, getContext());
-                    } else if (n.predicateType.equals(Or.class)) {
-                        ActorRef orActorRef = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                            @Override
-                            public UntypedActor create() {
-                                return new OrParallelSearcherActor(searchActors);
-                            }
-                        }).start();
-
-                        orActorRef.sendOneWay(n, getContext());
                     }
                 }
             } else if (message instanceof ResultSet) {
@@ -139,97 +128,22 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                 ResultSet r = (ResultSet) message;
                 numAnswers++;
                 if (numAnswers == 1) {
-                    andResults = r;
+                    results = r;
                 }
-                else
-                    andResults = combiner.intersect(andResults, r);
-
-                if (numAnswers >= possibleAnswers) {
-                    if (originalActor != null) {
-                        originalActor.sendOneWay(andResults);
-                    } else {
-                        future.completeWithResult(andResults);
+                else {
+                    if (node.predicateType.equals(And.class))
+                        results = combiner.intersect(results, r);
+                    else  {
+                        ArrayList l = new ArrayList();
+                        l.add(r);
+                        l.add(results);
+                        //then combine the two result sets
+                        results = combiner.join(l, node.distinct);
                     }
                 }
-            }
-        }
-    }
-
-    class OrParallelSearcherActor extends UntypedActor {
-
-        protected HashMap<String, ActorRef> searchActors;
-        protected int numAnswers, possibleAnswers;
-        protected List<ResultSet> orResults;
-        protected ResultSet results;
-        protected ResultSetParallelOperations combiner;
-        protected ActorRef originalActor;
-        protected CompletableFuture future;
-
-        public OrParallelSearcherActor(HashMap<String, ActorRef> actors) {
-            this.searchActors = actors;
-            combiner = new ResultSetParallelOperations();
-            orResults = new ArrayList<ResultSet>();
-        }
-
-        @Override
-        public void onReceive(Object message) throws Exception {
-            if (message instanceof QueryParserNode) {
-                if (getContext().getSenderFuture().isDefined()) {
-                    future = (CompletableFuture) getContext().getSenderFuture().get();
-                } else if (getContext().getSender().isDefined()) {
-                    originalActor = (ActorRef) getContext().getSender().get();
-                }
-
-                QueryParserNode node = (QueryParserNode) message;
-                List<QueryParserNode> nodes = node.childrenNodes;
-                possibleAnswers = nodes.size();
-                for (QueryParserNode n : nodes) {
-                    if (n.predicateType.equals(Similar.class)
-                            || n.predicateType.equals(Equal.class)
-                            || n.predicateType.equals(NotEqual.class)) {
-
-                        ActorRef actorRef = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                            @Override
-                            public UntypedActor create() {
-                                return new SimilarEqualParallelSearcherActor(searchActors);
-                            }
-                        }).start();
-
-                        actorRef.sendOneWay(n, getContext());
-                    } else if (n.predicateType.equals(And.class)) {
-                        ActorRef andActorRef = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                            @Override
-                            public UntypedActor create() {
-                                return new AndParallelSearcherActor(searchActors);
-                            }
-                        }).start();
-
-                        andActorRef.sendOneWay(n, getContext());
-                    } else if (n.predicateType.equals(Or.class)) {
-                        ActorRef orActorRef = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                            @Override
-                            public UntypedActor create() {
-                                return new OrParallelSearcherActor(searchActors);
-                            }
-                        }).start();
-
-                        orActorRef.sendOneWay(n, getContext());
-                    }
-                }
-            } else if (message instanceof ResultSet) {
-
-                ResultSet r = (ResultSet) message;
-                orResults.add(r);
-                numAnswers++;
+                    
 
                 if (numAnswers >= possibleAnswers) {
-
-                    //must check if it is distinct or not
-                    results = combiner.join(orResults, true);
-
                     if (originalActor != null) {
                         originalActor.sendOneWay(results);
                     } else {
@@ -246,13 +160,13 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         protected int numAnswers, possibleAnswers;
         protected List<ResultSet> partResults;
         protected ResultSet results;
-        protected ResultSetParallelOperations combiner;
+        protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
 
         public SimilarEqualParallelSearcherActor(HashMap<String, ActorRef> actors) {
             this.searchActors = actors;
-            combiner = new ResultSetParallelOperations();
+            combiner = new ResultSetOperations();
             partResults = new ArrayList<ResultSet>();
         }
 
@@ -307,7 +221,6 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                         }
 
                         String parentField = parentPath.getAttributeName();
-//                        Searcher s = searcherMap.get(parentField);
                         Class clazz = parentPath.getJavaType();
                         Path newQueryPath = new Path(clazz);
 
@@ -335,10 +248,8 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
 
                         for (IndexedObject obj : indexedObjects) {
                             String fieldName = obj.getName();
-                            Searcher s = searcherMap.get(fieldName);
 
                             CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
-
                             CriteriaQuery query = cb.createQuery(obj.getValue().getClass());
                             Path subModelPath = null;
                             Class clazz = obj.getValue().getClass();
@@ -384,7 +295,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
     class ParallelQueryProcessor extends UntypedActor {
 
         HashMap<String, ActorRef> searchActors;
-        ResultSetParallelOperations combiner = new ResultSetParallelOperations();
+        ResultSetOperations combiner = new ResultSetOperations();
         List<ResultSet<E>> resultsParts = new ArrayList<ResultSet<E>>();
         ActorRef originalActor;
         CompletableFuture future;
@@ -418,26 +329,17 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                     originalActor = (ActorRef) getContext().getSender().get();
                 }
 
-                if (node.predicateType.equals(And.class)) {
+                if (node.predicateType.equals(And.class) ||
+                        node.predicateType.equals(Or.class)) {
                     ActorRef andActorRef = UntypedActor.actorOf(new UntypedActorFactory() {
 
                         @Override
                         public UntypedActor create() {
-                            return new AndParallelSearcherActor(searchActors);
+                            return new BooleanSearcherActor(searchActors);
                         }
                     }).start();
 
                     andActorRef.sendOneWay(message, getContext());
-                } else if (node.predicateType.equals(Or.class)) {
-                    ActorRef orActorRef = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                        @Override
-                        public UntypedActor create() {
-                            return new OrParallelSearcherActor(searchActors);
-                        }
-                    }).start();
-
-                    orActorRef.sendOneWay(message, getContext());
                 } else if (node.predicateType.equals(Similar.class)
                         || node.predicateType.equals(Equal.class)
                         || node.predicateType.equals(NotEqual.class)) {
@@ -480,7 +382,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         }).start();
 
         //waiting for the processor to output results
-        Future future = actorRef.sendRequestReplyFuture(node, 300000, null);
+        Future future = actorRef.sendRequestReplyFuture(node, 30000, null);
         future.await();
 
         if (future.isCompleted()) {
@@ -495,175 +397,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
             }
         }
 
-//          if (node.predicateType.equals(Similar.class)
-//                || node.predicateType.equals(Equal.class)
-//                || node.predicateType.equals(NotEqual.class)) {
-
-//            if (node.field != null) {
-//                /*
-//                 * must check the path object - see wheter it is a field from this
-//                 * class or from other indexed field, in other class
-//                 */
-//                QueryParserNode pathNode = node.childrenNodes.get(0);
-//                Path p = (Path) pathNode.predicate;
-//
-//                //track the full path of the desired field
-//                Queue<Path> relativePaths = new LinkedList<Path>();
-//
-//                Path parentPath = p.getParentPath();
-//                if (parentPath.isField()) {     //its not a field of this processor
-//                    while (parentPath.isField()) {
-//                        relativePaths.add(parentPath);
-//                        parentPath = parentPath.getParentPath();
-//                    }
-//
-//                    if (relativePaths.size() > 0) {
-//                        parentPath = relativePaths.remove();
-//                    } else {
-//                        parentPath = p;
-//                    }
-//
-//                    String parentField = parentPath.getAttributeName();
-//                    Searcher s = searcherMap.get(parentField);
-//                    Class clazz = parentPath.getJavaType();
-//                    Path newQueryPath = new Path(clazz);
-//
-//                    for (Path relPath : relativePaths) {
-//                        newQueryPath = newQueryPath.get(relPath.getAttributeName());
-//                    }
-//
-//                    //in the end we must have the elements we desire
-//                    newQueryPath = newQueryPath.get(node.field);
-//                    return s.search(createSubQuery(node, newQueryPath, node.fieldObject));
-//
-//                } else {
-//                    //get the respective searcher
-//                    Searcher s = searcherMap.get(node.field);
-//                    results = s.search(createSubQuery(node, parentPath, node.fieldObject));
-//                }
-//            } else {
-//                //dont know which searchers to use, so lets digg a bit
-//                try {
-//                    List<IndexedObject> indexedObjects = indexedObjectFactory.processBean((IEntity) node.fieldObject);
-//                    List<ResultSet<E>> resultsParts = new ArrayList<ResultSet<E>>();
-//                    for (IndexedObject obj : indexedObjects) {
-//                        String fieldName = obj.getName();
-//                        Searcher s = searcherMap.get(fieldName);
-//
-//                        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
-//
-//                        CriteriaQuery query = cb.createQuery(obj.getValue().getClass());
-//                        Path subModelPath = null;
-//                        Class clazz = obj.getValue().getClass();
-//                        //detect if the object is a compound one
-//                        if (obj.getValue() instanceof IEntity || obj.getValue() instanceof IndexedObject) {
-//                            clazz = obj.getValue().getClass();
-//                            subModelPath = query.from(clazz);
-//                        } else {
-//                            clazz = node.fieldObject.getClass();
-//                            subModelPath = query.from(clazz);
-//                            subModelPath = subModelPath.get(fieldName);
-//                        }
-//
-//                        resultsParts.add(s.search(createSubQuery(node, subModelPath, obj.getValue())));
-//                    }
-//
-//                    results = combiner.intersect(resultsParts);
-//
-//                } catch (IndexingException e) {
-//                    System.out.println("[Error-IndexingException] Possible reason: " + e.getMessage());
-//                }
-//            }
-//        }
-
         results.sort();
         return results;
-    }
-}
-
-/**
- * Implementation of Boolean Operations with ResultSets.
- * @author Ricardo
- * @param <E>
- */
-class ResultSetParallelOperations<E> {
-
-    /**
-     * Applies boolean operation AND to the list of ResultSets.
-     * @param results the list where to apply the AND operation
-     * @return
-     */
-    public ResultSet<E> intersect(List<ResultSet<E>> results) {
-
-        boolean first = true;
-        ResultSet combinedResultSet = new ResultSet(), set1 = null, set2 = null;
-        for (int i = 0; i < results.size(); i++) {
-
-            if (first) {
-                if (i + 1 < results.size()) {
-                    set1 = results.get(i);
-                    set2 = results.get(i + 1);
-                    combinedResultSet = this.intersect(set1, set2);
-                    i++;
-                } else {
-                    combinedResultSet = results.get(i);
-                }
-            } else {
-                set1 = combinedResultSet;
-                set2 = results.get(i);
-                combinedResultSet = this.intersect(set1, set2);
-            }
-        }
-
-        return combinedResultSet;
-    }
-
-    /**
-     * Applies boolean operation OR to the list of ResultSets.
-     * @param results the list where to apply the OR operation
-     * @return
-     */
-    public ResultSet<E> join(List<ResultSet<E>> results, boolean distinct) {
-
-        ResultSet combinedResultSet = new ResultSet();
-        for (ResultSet set : results) {
-            Iterator<Result> it = set.iterator();
-            while (it.hasNext()) {
-                Result r = it.next();
-                if (distinct) {
-                    if (!combinedResultSet.contains(r)) {
-                        combinedResultSet.add(r);
-                    }
-                } else {
-                    combinedResultSet.add(r);
-                }
-            }
-        }
-
-        return combinedResultSet;
-    }
-
-    /**
-     * Brute force combination of two ResultSet's. Only Result's that appear on
-     * both ResultSet's are included in the result ResultSet.
-     * @param set1
-     * @param set2
-     * @return
-     */
-    @SuppressWarnings({"unchecked"})
-    public ResultSet intersect(ResultSet<?> set1, ResultSet set2) {
-
-        List<Result> combinedResults = new ArrayList<Result>();
-
-        for (Result r1 : set1) {
-            if (set2.contains(r1)) {
-                Result r2 = set2.get(set2.indexOf(r1));
-                Result n = new Result(r1.getResult());
-                n.setSimilarity(r1.getSimilarity() * r2.getSimilarity());
-                combinedResults.add(n);
-            }
-        }
-
-        return new ResultSet(combinedResults);
     }
 }
