@@ -14,6 +14,7 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
+import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -46,6 +47,7 @@ public class CriteriaQueryParallelTest extends TestCase {
         engine.setObjectStorage(storage);
 //        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //Creating the searchers
