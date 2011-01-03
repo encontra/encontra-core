@@ -1,7 +1,15 @@
 package pt.inevo.encontra.index.search;
 
+import akka.actor.ActorRef;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.dispatch.CompletableFuture;
+import akka.dispatch.Future;
+import java.util.ArrayList;
+import java.util.List;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.descriptors.DescriptorList;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.Result;
@@ -22,6 +30,7 @@ import pt.inevo.encontra.storage.IEntry;
 public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     protected DescriptorExtractor extractor;
+    protected DescriptorList resultList;
 
     public SimpleSearcher() {
         queryProcessor = new QueryProcessorDefaultImpl();
@@ -76,82 +85,241 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
-        double overallMaxDistance = 0.0;
-        double maxDistance = Double.NEGATIVE_INFINITY;
 
-        ResultSet results = new ResultSet<Descriptor>();
+        ResultSet resultSet = new ResultSet<Descriptor>();
+        resultList = new DescriptorList(maxHits, d);
 
-        EntryProvider<Descriptor> provider = index.getEntryProvider();
+        ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
-        for (; provider.hasNext();) {
-            Descriptor o = provider.getNext();
-
-            double distance = d.getDistance(o);
-            // calculate the overall max distance to normalize score afterwards
-            if (overallMaxDistance < distance) {
-                overallMaxDistance = distance;
+            @Override
+            public UntypedActor create() {
+                return new SimpleSearchCoordinator();
             }
-            // if it is the first document:
-            if (maxDistance < 0) {
-                maxDistance = distance;
-            }
-            // if the array is not full yet:
-            if (results.size() < maxHits) {
-                Result<Descriptor> result = new Result<Descriptor>(o);
-                result.setSimilarity(distance); // TODO - This is distance not similarity!!!
-                results.add(result);
-                if (distance > maxDistance) {
-                    maxDistance = distance;
-                }
-            } else if (distance < maxDistance) {
-                // if it is nearer to the sample than at least on of the current set:
-                // remove the last one ...
-                results.remove(results.size() - 1);
-                // add the new one ...
-                Result<Descriptor> result = new Result<Descriptor>(o);
-                result.setSimilarity(distance); // TODO - This is distance not similarity!!!
+        }).start();
 
-                results.add(result);
-                // and set our new distance border ...
-                maxDistance = results.get(results.size() - 1).getSimilarity();
+        Message m = new Message();
+        m.operation = "SIMILAR";
+        m.obj = d;
+
+        Future future = searchCoordinator.sendRequestReplyFuture(m, Long.MAX_VALUE, null);
+        future.await();
+
+        if (future.isCompleted()) {
+            for (Descriptor descr : resultList.getDescriptors()) {
+                Result<Descriptor> result = new Result<Descriptor>(descr);
+                result.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
+                resultSet.add(result);
             }
+
+            resultSet.normalizeScores();
+            resultSet.invertScores(); // This is a distance (dissimilarity) and we need similarity
         }
-
-        results.normalizeScores();
-        results.invertScores(); // This is a distance (dissimilarity) and we need similarity
-        return results;
+        return resultSet;
     }
 
     protected ResultSet<IEntry> performEqualQuery(Descriptor d, boolean equal) {
 
-        ResultSet results = new ResultSet<Descriptor>();
+        ResultSet resultSet = new ResultSet<Descriptor>();
+        if (!equal)
+            resultList = new DescriptorList(index.getEntryProvider().size(), d);
+        else resultList = new DescriptorList(1, d);
 
-        EntryProvider<Descriptor> provider = index.getEntryProvider();
+        ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
-        for (; provider.hasNext();) {
-            Descriptor o = provider.getNext();
-
-            double distance = d.getDistance(o);
-            // calculate the overall max distance to normalize score afterwards
-            if (equal && distance == 0) {
-                Result<Descriptor> result = new Result<Descriptor>(o);
-                result.setSimilarity(distance);
-                results.add(result);
-                break;
-            } else if (!equal && distance != 0) {
-                Result<Descriptor> result = new Result<Descriptor>(o);
-                result.setSimilarity(distance);
-                results.add(result);
+            @Override
+            public UntypedActor create() {
+                return new SimpleSearchCoordinator();
             }
-        }
+        }).start();
 
-        results.normalizeScores();
-        results.invertScores(); // This is a distance (dissimilarity) and we need similarity
-        return results;
+        Message m = new Message();
+        m.operation = "EQUAL";
+        m.obj = d;
+        m.equal = equal;
+
+        Future future = searchCoordinator.sendRequestReplyFuture(m, Long.MAX_VALUE, null);
+        future.await();
+
+        if (future.isCompleted()) {
+            for (Descriptor descr : resultList.getDescriptors()) {
+                Result<Descriptor> result = new Result<Descriptor>(descr);
+                result.setSimilarity(descr.getDistance(d)); // TODO - This is distance not similarity!!!
+                resultSet.add(result);
+            }
+
+            resultSet.normalizeScores();
+            resultSet.invertScores(); // This is a distance (dissimilarity) and we need similarity
+        }
+        return resultSet;
     }
 
     @Override
     protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResult()));
+    }
+
+    //Message to be passed between actors
+    class Message {
+
+        public String operation;
+        public int posInit;
+        public int posEnd;
+        public Object obj;
+        public boolean equal;
+    }
+
+    class SimpleSearcherActor extends UntypedActor {
+
+        protected EntryProvider<Descriptor> provider;
+        protected int status;
+
+        SimpleSearcherActor(EntryProvider<Descriptor> provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public void onReceive(Object o) throws Exception {
+            Message message = (Message) o;
+
+            provider.begin();
+            if (message.posInit != 0) {
+                for (int i = 0; i < message.posInit; i++) {
+                    if (provider.hasNext()) {
+                        provider.getNext();
+                    }
+                }
+            }
+
+            status = message.posEnd - message.posInit;
+
+            if (message.operation.equals("SIMILAR")) {
+                while (provider.hasNext() && status != 0) {
+                    Descriptor p = provider.getNext();
+                    if (!resultList.contains(p)) {
+                        //insert only if it doesn't already exists
+                        if (!resultList.addDescriptor(p)) {
+                            /*we are not improving the resultList going
+                            this way, so stop the search*/
+                        }
+                    }
+                    status--;
+                }
+
+                Message m = new Message();
+                m.operation = "FINISHED";
+                getContext().replySafe(m);
+
+            } else if (message.operation.equals("EQUAL")) {
+                Descriptor d = (Descriptor) message.obj;
+                while (provider.hasNext() && status != 0) {
+                    Descriptor desc = provider.getNext();
+                    double distance = d.getDistance(desc);
+                    // calculate the overall max distance to normalize score afterwards
+                    if (message.equal && distance == 0) {
+                        resultList.addDescriptor(desc);
+                        break;
+                    } else if (!message.equal && distance != 0) {
+                        resultList.addDescriptor(desc);
+                    }
+                }
+
+                Message m = new Message();
+                m.operation = "SUCCESS";
+                getContext().replySafe(m);
+            }
+        }
+    }
+
+    class SimpleSearchCoordinator extends UntypedActor {
+
+        protected int MAX_ACTORS = 10;
+        protected int count = 0, posAct;
+        protected ActorRef originalActor;
+        protected CompletableFuture future;
+        protected List<ActorRef> searchActors;
+        protected EntryProvider provider;
+
+        SimpleSearchCoordinator() {
+            //create a group of several searchers through the index
+            searchActors = new ArrayList<ActorRef>();
+            for (int i = 0; i < MAX_ACTORS; i++) {
+                final EntryProvider<Descriptor> provider = index.getEntryProvider();
+                ActorRef searchActor = UntypedActor.actorOf(new UntypedActorFactory() {
+
+                    @Override
+                    public UntypedActor create() {
+                        return new SimpleSearcherActor(provider);
+                    }
+                });
+                searchActors.add(searchActor);
+            }
+        }
+
+        @Override
+        public void onReceive(Object o) throws Exception {
+            Message message = (Message) o;
+            if (message.operation.equals("SIMILAR")
+                    || message.operation.equals("EQUAL")) {
+                count = 0;
+                if (getContext().getSenderFuture().isDefined()) {
+                    future = (CompletableFuture) getContext().getSenderFuture().get();
+                } else if (getContext().getSender().isDefined()) {
+                    originalActor = (ActorRef) getContext().getSender().get();
+                }
+
+                //getting an entry provider to inspect the index
+                provider = index.getEntryProvider();
+
+                if (provider.size() > 10) { //sending 10 actors to search the index to improve performance
+                    for (int i = 0; i < MAX_ACTORS && posAct < provider.size(); i++) {
+                        Message m = new Message();
+                        m.operation = message.operation;    //use the exact same operation
+                        m.posInit = 0;
+                        m.posInit = posAct;
+                        if ((posAct + 10) < provider.size()) {
+                            posAct += 10;
+                        } else {
+                            posAct = provider.size();
+                        }
+                        m.posEnd = posAct;
+                        m.obj = message.obj;
+                        m.equal = message.equal;
+
+                        ActorRef searchActor = searchActors.get(i).start();
+                        searchActor.sendOneWay(m, getContext());
+                    }
+                } else {    //i'm only sending one actor to improve performance
+                    Message m = new Message();
+                    m.operation = message.operation;
+                    m.posInit = 0;
+                    m.posEnd = provider.size();
+                    m.obj = message.obj;
+                    m.equal = message.equal;
+
+                    MAX_ACTORS = 1;
+                    ActorRef searchActor = searchActors.get(0).start();
+                    searchActor.sendOneWay(m, getContext());
+                }
+            } else if (message.operation.equals("FINISHED")) {
+                count++;
+                if (count == MAX_ACTORS) {
+                    if (originalActor != null) {
+                        originalActor.sendOneWay(true);
+                    } else {
+                        future.completeWithResult(true);
+                    }
+                }
+            } else if (message.operation.equals("SUCCESS")) {
+                for (ActorRef searchActor : searchActors) {
+                    searchActor.stop();
+                }
+
+                if (originalActor != null) {
+                    originalActor.sendOneWay(true);
+                } else {
+                    future.completeWithResult(true);
+                }
+            }
+        }
     }
 }
