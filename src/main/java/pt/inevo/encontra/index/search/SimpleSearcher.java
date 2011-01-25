@@ -6,6 +6,7 @@ import akka.actor.UntypedActorFactory;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
@@ -31,6 +32,113 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     protected DescriptorExtractor extractor;
     protected DescriptorList resultList;
+
+    class SimpleResultsProvider implements ResultsProvider<O> {
+
+        String iteratorType;
+        Descriptor queryDescriptor;
+        EntryProvider<Descriptor> provider;
+        DescriptorList iteratorList;
+        Iterator<Descriptor> resultIt;
+        Descriptor previousDescriptor;
+
+        //the iterator position - this is very important!!!!
+        SimpleResultsProvider(String queryType, Descriptor d) {
+            iteratorType = queryType;
+            queryDescriptor = d;
+            provider = index.getEntryProvider();
+            provider.setCursor(d);
+
+            //let's start with 20 - is it enough?
+            iteratorList = new DescriptorList(20, d);
+            while (provider.hasNext()) {
+                Descriptor desc = provider.getNext();
+                if (!iteratorList.contains(desc)) {
+                    //insert only if it doesn't already exists
+                    if (!iteratorList.addDescriptor(desc)) {
+                        /*we are not improving the resultList going
+                        this way, so stop the search*/
+                        break;
+                    }
+                }
+            }
+            resultIt = iteratorList.iterator();
+        }
+
+        @Override
+        public Result<O> getNext() {
+            if (iteratorType.equals("SIMILAR")) {
+                if (!resultIt.hasNext()) {
+                    int oldSize = iteratorList.getSize();
+                    iteratorList.setMaxSize(oldSize + 20);
+                    resultIt = iteratorList.iterator();
+                    for (int i = 0; i < oldSize && resultIt.hasNext(); i++) {
+                        resultIt.next();
+                    }
+
+                    //just start looking from here
+                    provider.setCursor(previousDescriptor);
+                    while (provider.hasNext()) {
+                        Descriptor desc = provider.getNext();
+                        if (!iteratorList.contains(desc)) {
+                            //insert only if it doesn't already exists
+                            if (!iteratorList.addDescriptor(desc)) {
+                                /*we are not improving the resultList going
+                                this way, so stop the search*/
+                                break;
+                            }
+                        }
+                    }
+
+                }
+
+                //this is a very horrible hacking :(
+                if (resultIt.hasNext()) {
+                    Descriptor descr = resultIt.next();
+                    previousDescriptor = descr;
+                    Result<Descriptor> result = new Result<Descriptor>(descr);
+                    result.setSimilarity(descr.getDistance(queryDescriptor)); // TODO - This is distance not similarity!!!
+
+                    Result<O> r = new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) result.getResult()));
+                    r.setSimilarity(result.getSimilarity());
+                    return r;
+                } else {
+                    //no more results to retrieve
+                    return null;
+                }
+
+            }
+            //must be carefull so this null doesn't pop out
+            return null;
+        }
+
+        @Override
+        public List<Result<O>> getNext(int next) {
+            return null;
+        }
+    }
+
+    @Override
+    public ResultsProvider<O> getResultsProvider(Query query) {
+        if (query instanceof CriteriaQuery) {
+            //parse the query
+            QueryParserNode node = queryProcessor.getQueryParser().parse(query);
+            //make the query
+            if (node.predicateType.equals(Similar.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                return new SimpleResultsProvider("SIMILAR", d);
+            } else if (node.predicateType.equals(Equal.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                return new SimpleResultsProvider("EQUAL", d);
+            } else if (node.predicateType.equals(NotEqual.class)) {
+                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                return new SimpleResultsProvider("NOTEQUAL", d);
+            } else {
+                return null;
+            }
+        }
+        return null;
+    }
 
     public SimpleSearcher() {
         queryProcessor = new QueryProcessorDefaultImpl();
@@ -120,9 +228,11 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     protected ResultSet<IEntry> performEqualQuery(Descriptor d, boolean equal) {
 
         ResultSet resultSet = new ResultSet<Descriptor>();
-        if (!equal)
+        if (!equal) {
             resultList = new DescriptorList(index.getEntryProvider().size(), d);
-        else resultList = new DescriptorList(1, d);
+        } else {
+            resultList = new DescriptorList(1, d);
+        }
 
         ActorRef searchCoordinator = UntypedActor.actorOf(new UntypedActorFactory() {
 
@@ -160,7 +270,6 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     //Message to be passed between actors
     class Message {
-
         public String operation;
         public int posInit;
         public int posEnd;

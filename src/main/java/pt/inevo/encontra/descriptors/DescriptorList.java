@@ -3,9 +3,9 @@ package pt.inevo.encontra.descriptors;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Comparator;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import pt.inevo.encontra.descriptors.Descriptor;
 
 /**
  * Object that holds a list of Descriptors, as the result to a query.
@@ -78,6 +78,16 @@ public class DescriptorList implements Iterable<Descriptor> {
     }
 
     /**
+     * Adds a set of descriptors to the list
+     * @param descriptors
+     */
+    public void addDescriptors(Set<Descriptor> descriptors){
+        for(Descriptor d: descriptors){
+            addDescriptor(d);
+        }
+    }
+
+    /**
      * Checks if the list already contains the specified point.
      * @param point
      * @return
@@ -145,5 +155,29 @@ public class DescriptorList implements Iterable<Descriptor> {
             s = sortedPoints.size();
         }
         return s;
+    }
+
+    public void setMaxSize(int newSize) {
+        synchronized(sortedPoints){
+            size = newSize;
+        }
+    }
+
+    public int getMaxSize(){
+        int s;
+        synchronized(sortedPoints){
+            s = size;
+        }
+        return s;
+    }
+
+    /**
+     * Gets a copy of the current DescriptorList
+     * @return
+     */
+    public DescriptorList getCopy() {
+        DescriptorList newList = new DescriptorList(size, seedP);
+        newList.addDescriptors(sortedPoints);
+        return newList;
     }
 }
