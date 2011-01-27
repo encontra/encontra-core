@@ -9,8 +9,9 @@ import java.util.Queue;
 import pt.inevo.encontra.engine.QueryProcessor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.IndexingException;
-import pt.inevo.encontra.index.Result;
-import pt.inevo.encontra.index.ResultSet;
+import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
@@ -38,19 +39,19 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
     }
 
     @Override
-    public ResultSet process(QueryParserNode node) {
+    public ResultSet<E> process(QueryParserNode node) {
 
-        ResultSet<E> results = new ResultSet<E>();
+        ResultSet<E> results = new ResultSetDefaultImpl<E>();
 
         if (node.predicateType.equals(And.class)) {
-            List<ResultSet<E>> resultsParts = new ArrayList<ResultSet<E>>();
+            List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
             List<QueryParserNode> nodes = node.childrenNodes;
             for (QueryParserNode n : nodes) {
                 resultsParts.add(process(n));
             }
             results = combiner.intersect(resultsParts);
         } else if (node.predicateType.equals(Or.class)) {
-            List<ResultSet<E>> resultsParts = new ArrayList<ResultSet<E>>();
+            List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
             List<QueryParserNode> nodes = node.childrenNodes;
             for (QueryParserNode n : nodes) {
                 resultsParts.add(process(n));
@@ -106,7 +107,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                 //dont know which searchers to use, so lets digg a bit
                 try {
                     List<IndexedObject> indexedObjects = indexedObjectFactory.processBean((IEntity) node.fieldObject);
-                    List<ResultSet<E>> resultsParts = new ArrayList<ResultSet<E>>();
+                    List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
                     for (IndexedObject obj : indexedObjects) {
                         String fieldName = obj.getName();
                         Searcher s = searcherMap.get(fieldName);
@@ -137,7 +138,6 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
             }
         }
 
-        results.sort();
         return results;
     }
 
@@ -162,7 +162,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
  * @author Ricardo
  * @param <E>
  */
-class ResultSetOperations<E> {
+class ResultSetOperations<E extends IEntity> {
 
     /**
      * Applies boolean operation AND to the list of ResultSets.
@@ -171,23 +171,38 @@ class ResultSetOperations<E> {
      */
     public ResultSet<E> intersect(List<ResultSet<E>> results) {
 
-        boolean first = true;
-        ResultSet combinedResultSet = new ResultSet(), set1 = null, set2 = null;
-        for (int i = 0; i < results.size(); i++) {
+        //final results
+        ResultSet combinedResultSet = new ResultSetDefaultImpl();
 
-            if (first) {
-                if (i + 1 < results.size()) {
-                    set1 = results.get(i);
-                    set2 = results.get(i + 1);
-                    combinedResultSet = this.intersect(set1, set2);
-                    i++;
-                } else {
-                    combinedResultSet = results.get(i);
+        //invert and normalize all the results
+        for (ResultSet set: results){
+            set.invertScores();
+            set.normalizeScores();
+        }
+
+        for (ResultSet set: results) {
+            Iterator<Result> it = set.iterator();
+            while (it.hasNext()){
+                Result r = it.next();
+
+                if (!combinedResultSet.containsResultObject(r.getResultObject())) {
+                    boolean contains = true;
+                    double score = r.getScore();
+                    for (ResultSet s: results) {
+                        if (!s.containsResultObject(r.getResultObject())) {
+                            contains = false;
+                            break;
+                        } else {
+                            score = s.getScore(r.getResultObject());
+                        }
+                    }
+
+                    if (contains) {
+                        Result newResult = new Result(r.getResultObject());
+                        newResult.setScore(score/results.size());
+                        combinedResultSet.add(newResult);
+                    }
                 }
-            } else {
-                set1 = combinedResultSet;
-                set2 = results.get(i);
-                combinedResultSet = this.intersect(set1, set2);
             }
         }
 
@@ -199,15 +214,20 @@ class ResultSetOperations<E> {
      * @param results the list where to apply the OR operation
      * @return
      */
-    public ResultSet<E> join(List<ResultSet<E>> results, boolean distinct) {
+    public ResultSet<E> join(List<ResultSetDefaultImpl<E>> results, boolean distinct) {
 
-        ResultSet combinedResultSet = new ResultSet();
+        //final resultset
+        ResultSet combinedResultSet = new ResultSetDefaultImpl();
+
+        //let's get the results
         for (ResultSet set : results) {
+            set.invertScores();
+            set.normalizeScores();
             Iterator<Result> it = set.iterator();
             while (it.hasNext()) {
                 Result r = it.next();
                 if (distinct) {
-                    if (!combinedResultSet.contains(r)) {
+                    if (!combinedResultSet.containsResultObject(r.getResultObject())) {
                         combinedResultSet.add(r);
                     }
                 } else {
@@ -216,30 +236,22 @@ class ResultSetOperations<E> {
             }
         }
 
-        return combinedResultSet;
-    }
-
-    /**
-     * Brute force combination of two ResultSet's. Only Result's that appear on
-     * both ResultSet's are included in the result ResultSet.
-     * @param set1
-     * @param set2
-     * @return
-     */
-    @SuppressWarnings({"unchecked"})
-    public ResultSet intersect(ResultSet<?> set1, ResultSet set2) {
-
-        List<Result> combinedResults = new ArrayList<Result>();
-
-        for (Result r1 : set1) {
-            if (set2.contains(r1)) {
-                Result r2 = set2.get(set2.indexOf(r1));
-                Result n = new Result(r1.getResult());
-                n.setSimilarity(r1.getSimilarity() * r2.getSimilarity());
-                combinedResults.add(n);
+        //now let's set the scores correctly
+        Iterator<Result> it = combinedResultSet.iterator();
+        while (it.hasNext()) {
+            Result r = it.next();
+            double resultScore = r.getScore();
+            int found = 1;
+            for (ResultSet set : results) {
+                if (set.containsResultObject(r.getResultObject())) {
+                    resultScore += set.getScore(r.getResultObject());
+                    found++;
+                }
             }
+            resultScore /= found;
+            r.setScore(resultScore);
         }
 
-        return new ResultSet(combinedResults);
+        return combinedResultSet;
     }
 }

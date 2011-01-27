@@ -1,10 +1,12 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -14,6 +16,7 @@ import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
+//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
@@ -148,10 +151,10 @@ public class CriteriaQuerySimilarityTest extends TestCase {
 
     //prints the results
     private void printResults(ResultSet<MetaTestModel> results) {
-        System.out.println("Number of retrieved elements: " + results.size());
+        System.out.println("Number of retrieved elements: " + results.getSize());
         for (Result<MetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
+            System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
+            System.out.println("Similarity: " + r.getScore());
         }
     }
 }

@@ -1,11 +1,13 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -14,7 +16,9 @@ import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
+//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
+import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 
 /**
@@ -43,6 +47,7 @@ public class CriteriaQueryNotTest extends TestCase {
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
@@ -96,7 +101,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //check if it returned one result
-        assertTrue(results.size() == 7);
+        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -117,7 +122,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return no results
-        assertTrue(results.size() == 7);
+        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -137,7 +142,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return only one result
-        assertTrue(results.size() == 7);
+        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -185,7 +190,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //only one result because of the and condition
-        assertTrue(results.size() == 1);
+        assertTrue(results.getSize() == 1);
 
         printResults(results);
     }
@@ -209,7 +214,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.size() == 7);
+        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -234,7 +239,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.size() == 6);
+        assertTrue(results.getSize() == 6);
 
         printResults(results);
     }
@@ -259,7 +264,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.size() == 8);
+        assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -284,7 +289,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.size() == 6);
+        assertTrue(results.getSize() == 6);
 
         printResults(results);
     }
@@ -311,7 +316,7 @@ public class CriteriaQueryNotTest extends TestCase {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.size() > 1);
+        assertTrue(results.getSize() > 1);
 
         printResults(results);
     }
@@ -332,18 +337,17 @@ public class CriteriaQueryNotTest extends TestCase {
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        //should return two results because of the or condition
-//        assertTrue(results.size() == 1);
+        assertTrue(results.getSize() == 1);
 
         printResults(results);
     }
 
     //just print the results to the standard output
     private void printResults(ResultSet<MetaTestModel> results) {
-        System.out.println("Number of retrieved elements: " + results.size());
+        System.out.println("Number of retrieved elements: " + results.getSize());
         for (Result<MetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
+            System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
+            System.out.println("Similarity: " + r.getScore());
         }
     }
 }

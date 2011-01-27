@@ -14,7 +14,8 @@ public class NotEqual extends BinaryLogicalExpression {
 
     @Override
     public PredicateImpl not() {
-        return new Equal(e1, e2).markNegated();
+        //negate something that was already negated, turns into this
+        return new Equal(e1, e2);
     }
 
 }

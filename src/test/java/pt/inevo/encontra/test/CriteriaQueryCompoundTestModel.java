@@ -1,5 +1,6 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.common.Result;
 import java.util.List;
 import pt.inevo.encontra.test.entities.CompoundMetaTestModel;
 import pt.inevo.encontra.test.entities.MetaTestModel;
@@ -7,6 +8,7 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -18,7 +20,9 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.Query;
+//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
+import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -90,7 +94,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
 
         @Override
         protected Result getResultObject(Result<IEntry> entryResult) {
-            return new Result<O>((O) storage.get(entryResult.getResult().getId()));
+            return new Result<O>((O) storage.get(entryResult.getResultObject().getId()));
         }
     }
 
@@ -111,6 +115,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         engine = new SimpleEngine<CompoundMetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
@@ -259,7 +264,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         //Searching in the engine for the results
         ResultSet<CompoundMetaTestModel> results = engine.search(query);
 
-        assertTrue(results.size() == 1);
+        assertTrue(results.getSize() == 1);
 
         printResults(results);
     }
@@ -282,7 +287,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         //Searching in the engine for the results
         ResultSet<CompoundMetaTestModel> results = engine.search(query);
 
-        assertTrue(results.size() == 7);
+        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -296,7 +301,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
 
         Path<String> metaModelTitlePath = model.get("testModel").get("title");
         Path<String> contentModelPath = model.get("testModel").get("content");
-        
+
         Expression<Boolean> equalClause = cb.not(cb.equal(metaModelTitlePath, "bab"));
         Expression<Boolean> contentClause = cb.similar(contentModelPath, "aab");
 
@@ -306,16 +311,16 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         //Searching in the engine for the results
         ResultSet<CompoundMetaTestModel> results = engine.search(query);
 
-        assertTrue(results.size() == 7);
+        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
 
     private void printResults(ResultSet<CompoundMetaTestModel> results) {
-        System.out.println("Number of retrieved elements: " + results.size());
+        System.out.println("Number of retrieved elements: " + results.getSize());
         for (Result<CompoundMetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
+            System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
+            System.out.println("Similarity: " + r.getScore());
         }
     }
 }

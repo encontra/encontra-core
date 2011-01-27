@@ -1,10 +1,12 @@
 package pt.inevo.encontra.test.processors;
 
+import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
@@ -14,7 +16,9 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;
+//import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;c
+import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
+import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -45,8 +49,10 @@ public class QueryProcessorTest extends TestCase {
         //Creating the engine and setting its properties
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
-        engine.setQueryProcessor(new QueryProcessorParallelLinearImpl());
-//        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorParallelLinearImpl());
+//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
+        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //Creating the searchers
@@ -85,94 +91,94 @@ public class QueryProcessorTest extends TestCase {
 
     @Test
     public void test1() {
-//        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-//
-//        //Create the Model/Attributes Path
-//        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-//        Path<String> titleModel = model.get("title");
-//        Path<String> contentModel = model.get("content");
-//
-//        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
-//        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaa");
-//
-//        //Create the Query
-//        CriteriaQuery query = cb.createQuery().where(
-//                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true);
-//
-//        //Searching in the engine for the results
-//        ResultSet<MetaTestModel> results = engine.search(query);
-//
-//        printResults(results);
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
+
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
+        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaa");
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true);
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        printResults(results);
     }
 
     @Test
     public void test2() {
-//        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-//
-//        //Create the Model/Attributes Path
-//        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-//
-//        MetaTestModel m = new MetaTestModel("aab", "ghak");
-//        m.setId(Long.MIN_VALUE);
-//
-//        //Create the Query
-//        CriteriaQuery query = cb.createQuery().where(cb.similar(model, m)).distinct(true);
-//
-//        //Searching in the engine for the results
-//        ResultSet<MetaTestModel> results = engine.search(query);
-//
-//        printResults(results);
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+
+        MetaTestModel m = new MetaTestModel("aab", "ghak");
+        m.setId(Long.MIN_VALUE);
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(cb.similar(model, m)).distinct(true);
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        printResults(results);
     }
 
     @Test
     public void test3() {
-//        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-//
-//        //Create the Model/Attributes Path
-//        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-//        Path<String> titleModel = model.get("title");
-//
-//        MetaTestModel m = new MetaTestModel("aab", "ghak");
-//        m.setId(Long.MIN_VALUE);
-//
-//        //Create the Query
-//        CriteriaQuery query = cb.createQuery().where(
-//                cb.and(
-//                    cb.similar(model, m),
-//                    cb.equal(titleModel, "aaa"))).distinct(true);
-//
-//        //Searching in the engine for the results
-//        ResultSet<MetaTestModel> results = engine.search(query);
-//
-//        printResults(results);
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+
+        MetaTestModel m = new MetaTestModel("aab", "ghak");
+        m.setId(Long.MIN_VALUE);
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(
+                    cb.similar(model, m),
+                    cb.equal(titleModel, "aaa"))).distinct(true);
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        printResults(results);
     }
 
     @Test
     public void test4() {
-//        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-//
-//        //Create the Model/Attributes Path
-//        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-//        Path<String> titleModel = model.get("title");
-//
-//        MetaTestModel m = new MetaTestModel("aab", "ghak");
-//        m.setId(Long.MIN_VALUE);
-//
-//        //Create the Query
-//        CriteriaQuery query = cb.createQuery().where(cb.equal(titleModel, "aaa")).distinct(true);
-//
-//        //Searching in the engine for the results
-//        ResultSet<MetaTestModel> results = engine.search(query);
-//
-//        printResults(results);
+        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
+        //Create the Model/Attributes Path
+        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+
+        MetaTestModel m = new MetaTestModel("aab", "ghak");
+        m.setId(Long.MIN_VALUE);
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(cb.equal(titleModel, "aaa")).distinct(true);
+
+        //Searching in the engine for the results
+        ResultSet<MetaTestModel> results = engine.search(query);
+
+        printResults(results);
     }
 
     //prints the results
     private void printResults(ResultSet<MetaTestModel> results) {
-        System.out.println("Number of retrieved elements: " + results.size());
+        System.out.println("Number of retrieved elements: " + results.getSize());
         for (Result<MetaTestModel> r : results) {
-            System.out.print("Retrieved element: " + r.getResult().toString() + "\t");
-            System.out.println("Similarity: " + r.getSimilarity());
+            System.out.print("Retrieved element: " + r.getResultObject().toString() + "\t");
+            System.out.println("Similarity: " + r.getScore());
         }
     }
 }
