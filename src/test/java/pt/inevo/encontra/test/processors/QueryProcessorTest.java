@@ -10,6 +10,7 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
+import pt.inevo.encontra.index.search.ParallelSimpleSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -19,6 +20,7 @@ import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 //import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;c
 import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.query.QueryProcessorParallelImpl;
+import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -57,12 +59,12 @@ public class QueryProcessorTest extends TestCase {
 
         //Creating the searchers
         //A searcher for the "title"
-        SimpleSearcher titleSearcher = new SimpleSearcher();
+        ParallelSimpleSearcher titleSearcher = new ParallelSimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
 
         //A searcher for the "content"
-        SimpleSearcher contentSearcher = new SimpleSearcher();
+        ParallelSimpleSearcher contentSearcher = new ParallelSimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
 
