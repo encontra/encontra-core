@@ -8,6 +8,7 @@ import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -17,8 +18,6 @@ import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
 //import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 
 /**
@@ -47,20 +46,23 @@ public class CriteriaQueryEqualTest extends TestCase {
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setResultProvider(new SyncResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -96,7 +98,7 @@ public class CriteriaQueryEqualTest extends TestCase {
         // query 1
         MetaTestModel m = new MetaTestModel("aaa", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m));
+        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m)).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -117,7 +119,7 @@ public class CriteriaQueryEqualTest extends TestCase {
 
         MetaTestModel m = new MetaTestModel("aaaj", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m));
+        CriteriaQuery query = cb.createQuery().where(cb.equal(model, m)).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -137,7 +139,7 @@ public class CriteriaQueryEqualTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
 
-        CriteriaQuery query = criteriaQuery.where(cb.equal(titleModel, "aaa"));
+        CriteriaQuery query = criteriaQuery.where(cb.equal(titleModel, "aaa")).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -161,7 +163,7 @@ public class CriteriaQueryEqualTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
                     cb.equal(titleModel, "aaa"),
-                    cb.equal(contentModel, "bbb")));
+                    cb.equal(contentModel, "bbb"))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -185,7 +187,7 @@ public class CriteriaQueryEqualTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
                     cb.equal(titleModel, "aaa"),
-                    cb.equal(contentModel, "bba")));
+                    cb.equal(contentModel, "bba"))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

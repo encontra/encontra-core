@@ -7,6 +7,7 @@ import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
@@ -17,7 +18,6 @@ import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 //import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -48,21 +48,22 @@ public class SmokeTest extends TestCase {
         //Creating the engine and setting its properties
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
-//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
-//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setResultProvider(new SyncResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -93,7 +94,7 @@ public class SmokeTest extends TestCase {
         testObject.setId(Long.MIN_VALUE);
 
         Expression<Boolean> similar = cb.similar(model, testObject);
-        CriteriaQuery query = cb.createQuery().where(similar).distinct(true);
+        CriteriaQuery query = cb.createQuery().where(similar).distinct(true).limit(20);
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //Searching in the engine for the results
@@ -114,7 +115,7 @@ public class SmokeTest extends TestCase {
 
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(
-                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true);
+                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true).limit(20);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -136,7 +137,7 @@ public class SmokeTest extends TestCase {
 
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(
-                cb.and(titleSimilarityClause, contentSimilarityClause));
+                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true).limit(20);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

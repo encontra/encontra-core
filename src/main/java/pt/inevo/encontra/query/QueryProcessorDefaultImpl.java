@@ -46,17 +46,28 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
         if (node.predicateType.equals(And.class)) {
             List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
             List<QueryParserNode> nodes = node.childrenNodes;
-            for (QueryParserNode n : nodes) {
-                resultsParts.add(process(n));
+            int previousResultSize = -1, partsSize = 0, previousPartsSize = -1;
+
+            for (int newLimit = node.limit*2; results.getSize() < node.limit && previousResultSize < results.getSize()
+                    && previousPartsSize < partsSize ; newLimit *= 2, resultsParts.clear()) {
+                previousResultSize = (results.getSize() == 0 ? -1 : results.getSize());
+                partsSize = 0;
+                previousPartsSize = partsSize;
+                for (QueryParserNode n : nodes) {
+                    n.limit = newLimit;   //lets increase the limit to speed up the combination
+                    ResultSet<E> r = process(n);
+                    partsSize += r.getSize();
+                    resultsParts.add(r);
+                }
+                results = combiner.intersect(resultsParts, node.limit);
             }
-            results = combiner.intersect(resultsParts);
         } else if (node.predicateType.equals(Or.class)) {
             List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
             List<QueryParserNode> nodes = node.childrenNodes;
             for (QueryParserNode n : nodes) {
                 resultsParts.add(process(n));
             }
-            results = combiner.join(resultsParts, node.distinct);
+            results = combiner.join(resultsParts, node.distinct, node.limit);
         } else if (node.predicateType.equals(Similar.class)
                 || node.predicateType.equals(Equal.class)
                 || node.predicateType.equals(NotEqual.class)) {
@@ -108,29 +119,36 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                 try {
                     List<IndexedObject> indexedObjects = indexedObjectFactory.processBean((IEntity) node.fieldObject);
                     List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
-                    for (IndexedObject obj : indexedObjects) {
-                        String fieldName = obj.getName();
-                        Searcher s = searcherMap.get(fieldName);
+                    int previousResultSize = -1;
+                    int initialLimit = node.limit;
 
-                        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+                    for ( ; results.getSize() < node.limit && previousResultSize < results.getSize();
+                            previousResultSize = results.getSize(), node.limit *= 2) {
 
-                        CriteriaQuery query = cb.createQuery(obj.getValue().getClass());
-                        Path subModelPath = null;
-                        Class clazz = obj.getValue().getClass();
-                        //detect if the object is a compound one
-                        if (obj.getValue() instanceof IEntity || obj.getValue() instanceof IndexedObject) {
-                            clazz = obj.getValue().getClass();
-                            subModelPath = query.from(clazz);
-                        } else {
-                            clazz = node.fieldObject.getClass();
-                            subModelPath = query.from(clazz);
-                            subModelPath = subModelPath.get(fieldName);
+                        for (IndexedObject obj : indexedObjects) {
+                            String fieldName = obj.getName();
+                            Searcher s = searcherMap.get(fieldName);
+
+                            CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+
+                            CriteriaQuery query = cb.createQuery(obj.getValue().getClass());
+                            Path subModelPath = null;
+                            Class clazz = obj.getValue().getClass();
+                            //detect if the object is a compound one
+                            if (obj.getValue() instanceof IEntity || obj.getValue() instanceof IndexedObject) {
+                                clazz = obj.getValue().getClass();
+                                subModelPath = query.from(clazz);
+                            } else {
+                                clazz = node.fieldObject.getClass();
+                                subModelPath = query.from(clazz);
+                                subModelPath = subModelPath.get(fieldName);
+                            }
+
+                            resultsParts.add(s.search(createSubQuery(node, subModelPath, obj.getValue())));
                         }
 
-                        resultsParts.add(s.search(createSubQuery(node, subModelPath, obj.getValue())));
+                        results = combiner.intersect(resultsParts, initialLimit);
                     }
-
-                    results = combiner.intersect(resultsParts);
 
                 } catch (IndexingException e) {
                     System.out.println("[Error-IndexingException] Possible reason: " + e.getMessage());
@@ -148,7 +166,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
         try {
             Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
             CriteriaQuery newQuery = q.where((Expression) c.newInstance(path, obj));
-            newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
+            newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct).limit(node.limit);
             return newQuery;
         } catch (Exception ex) {
             System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
@@ -166,29 +184,28 @@ class ResultSetOperations<E extends IEntity> {
 
     /**
      * Applies boolean operation AND to the list of ResultSets.
-     * @param results the list where to apply the AND operation
-     * @return
+     * @return results the list where to apply the AND operation
      */
-    public ResultSet<E> intersect(List<ResultSet<E>> results) {
+    public ResultSet<E> intersect(List<ResultSet<E>> results, int limit) {
 
         //final results
         ResultSet combinedResultSet = new ResultSetDefaultImpl();
 
         //invert and normalize all the results
-        for (ResultSet set: results){
+        for (ResultSet set : results) {
             set.invertScores();
             set.normalizeScores();
         }
 
-        for (ResultSet set: results) {
+        for (ResultSet set : results) {
             Iterator<Result> it = set.iterator();
-            while (it.hasNext()){
+            while (it.hasNext()) {
                 Result r = it.next();
 
                 if (!combinedResultSet.containsResultObject(r.getResultObject())) {
                     boolean contains = true;
                     double score = r.getScore();
-                    for (ResultSet s: results) {
+                    for (ResultSet s : results) {
                         if (!s.containsResultObject(r.getResultObject())) {
                             contains = false;
                             break;
@@ -199,14 +216,14 @@ class ResultSetOperations<E extends IEntity> {
 
                     if (contains) {
                         Result newResult = new Result(r.getResultObject());
-                        newResult.setScore(score/results.size());
+                        newResult.setScore(score / results.size());
                         combinedResultSet.add(newResult);
                     }
                 }
             }
         }
 
-        return combinedResultSet;
+        return combinedResultSet.getFirstResults(limit);
     }
 
     /**
@@ -214,7 +231,7 @@ class ResultSetOperations<E extends IEntity> {
      * @param results the list where to apply the OR operation
      * @return
      */
-    public ResultSet<E> join(List<ResultSetDefaultImpl<E>> results, boolean distinct) {
+    public ResultSet<E> join(List<ResultSetDefaultImpl<E>> results, boolean distinct, int limit) {
 
         //final resultset
         ResultSet combinedResultSet = new ResultSetDefaultImpl();
@@ -252,6 +269,6 @@ class ResultSetOperations<E extends IEntity> {
             r.setScore(resultScore);
         }
 
-        return combinedResultSet;
+        return combinedResultSet.getFirstResults(limit);
     }
 }

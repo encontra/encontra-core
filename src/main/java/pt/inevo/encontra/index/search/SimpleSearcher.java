@@ -60,7 +60,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             //make the query
             if (node.predicateType.equals(Similar.class)) {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, 10);
+                results = performKnnQuery(d, node.limit);
             } else if (node.predicateType.equals(Equal.class)) {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, true);
@@ -76,10 +76,9 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
-        double overallMaxDistance = 0.0;
-        double maxDistance = Double.NEGATIVE_INFINITY;
-
-        ResultSet results = new ResultSetDefaultImpl<Descriptor>();
+        Result rs = new Result(d);
+        ResultSet results = new ResultSetDefaultImpl<Descriptor>(rs, maxHits);
+        getResultProvider().setResultSet(results);
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
 
@@ -87,36 +86,10 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             Descriptor o = provider.getNext();
 
             double distance = d.getDistance(o);
-            // calculate the overall max distance to normalize score afterwards
-            if (overallMaxDistance < distance) {
-                overallMaxDistance = distance;
-            }
-            // if it is the first document:
-            if (maxDistance < 0) {
-                maxDistance = distance;
-            }
-            // if the array is not full yet:
-            if (results.getSize() < maxHits) {
-                Result<Descriptor> result = new Result<Descriptor>(o);
-                result.setScore(distance); // TODO - This is distance not similarity!!!
-                results.add(result);
-                if (distance > maxDistance) {
-                    maxDistance = distance;
-                }
-            } else if (distance < maxDistance) {
-                // if it is nearer to the sample than at least on of the current set:
-                // remove the last one ...
-//                results.remove(results.getSize() - 1);
-                results.remove(results.getLast());
-                // add the new one ...
-                Result<Descriptor> result = new Result<Descriptor>(o);
-                result.setScore(distance); // TODO - This is distance not similarity!!!
+            Result<Descriptor> r = new Result<Descriptor>(o);
+            r.setScore(distance);
 
-                results.add(result);
-                // and set our new distance border ...
-//                maxDistance = results.get(results.size() - 1).getSimilarity();
-                maxDistance = results.getLast().getScore();
-            }
+            results.add(r);
         }
 
         results.normalizeScores();
@@ -127,6 +100,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     protected ResultSet<IEntry> performEqualQuery(Descriptor d, boolean equal) {
 
         ResultSet results = new ResultSetDefaultImpl<Descriptor>();
+        getResultProvider().setResultSet(results);
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
 
@@ -153,7 +127,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
-        return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
+    protected Result<O> getResultObject(Result<IEntry> entryResult) {
+        return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) entryResult.getResultObject()));
     }
 }

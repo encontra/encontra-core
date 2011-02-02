@@ -1,12 +1,14 @@
 package pt.inevo.encontra.test;
 
 import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
@@ -15,8 +17,6 @@ import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -47,21 +47,24 @@ public class CriteriaQueryParallelTest extends TestCase {
         //Creating the engine and setting its properties
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
-//        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
-//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
+        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setResultProvider(new SyncResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);

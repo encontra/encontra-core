@@ -6,12 +6,8 @@ import akka.actor.UntypedActor;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
+
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.engine.QueryProcessor;
@@ -30,13 +26,13 @@ import pt.inevo.encontra.storage.IEntity;
 import scala.Option;
 
 /**
- * Default implementation for the query processor.
- * @author Ricardo
- */
+* Default implementation for the query processor.
+* @author Ricardo
+*/
 public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryProcessor<E> {
 
     protected Class resultClass;
-    ResultSetOperations combiner;
+    protected ResultSetOperations combiner;
 
     public QueryProcessorDefaultParallelImpl() {
         super();
@@ -74,11 +70,12 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
 
         protected HashMap<String, ActorRef> searchActors;
         protected int numAnswers, possibleAnswers;
-        protected List<ResultSetDefaultImpl> results;
+        protected List results;
         protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected QueryParserNode node;
+        protected int originalLimit = 0;
 
         public BooleanSearcherActor(HashMap<String, ActorRef> actors) {
             this.searchActors = actors;
@@ -96,7 +93,26 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                 }
 
                 node = (QueryParserNode) message;
+                originalLimit = node.limit;
                 List<QueryParserNode> nodes = node.childrenNodes;
+
+                //perform simple queries first
+                Collections.sort(nodes, new Comparator<QueryParserNode>() {
+
+                    @Override
+                    public int compare(QueryParserNode o1, QueryParserNode o2) {
+                        if (o1.predicateType.equals(And.class) || o1.predicateType.equals(Or.class)) {
+                            return 1;
+
+                        } else if (o2.predicateType.equals(And.class) || o2.predicateType.equals(Or.class)) {
+                            return -1;
+                        } else {
+                            return 0;
+
+                        }
+                    }
+                });
+
                 possibleAnswers = nodes.size();
                 for (QueryParserNode n : nodes) {
                     if (n.predicateType.equals(Similar.class)
@@ -125,20 +141,20 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                         andActorRef.sendOneWay(n, getContext());
                     }
                 }
-            } else if (message instanceof ResultSetDefaultImpl) {
+            } else if (message instanceof ResultSet) {
 
-                ResultSetDefaultImpl r = (ResultSetDefaultImpl) message;
+                ResultSet r = (ResultSet) message;
                 numAnswers++;
                 results.add(r);
 
                 if (numAnswers >= possibleAnswers) {
 
-                    ResultSet combinedResultSet = new ResultSetDefaultImpl();
+                    ResultSet combinedResultSet;
 
                     if (node.predicateType.equals(And.class)) {
-                        combinedResultSet = combiner.intersect(results);
+                        combinedResultSet = combiner.intersect(results, originalLimit);
                     } else {
-                        combinedResultSet = combiner.join(results, node.distinct);
+                        combinedResultSet = combiner.join(results, node.distinct, originalLimit);
                     }
 
                     if (originalActor != null) {
@@ -160,6 +176,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
+        protected QueryParserNode node;
 
         public SimilarEqualParallelSearcherActor(HashMap<String, ActorRef> actors) {
             this.searchActors = actors;
@@ -191,7 +208,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                     originalActor = (ActorRef) getContext().getSender().get();
                 }
 
-                QueryParserNode node = (QueryParserNode) message;
+                node = (QueryParserNode) message;
 
                 if (node.field != null) {
                     /*
@@ -277,7 +294,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
 
                 if (numAnswers >= possibleAnswers) {
 
-                    results = combiner.intersect(partResults);
+                    results = combiner.intersect(partResults, node.limit);
 
                     if (originalActor != null) {
                         originalActor.sendOneWay(results);
@@ -296,7 +313,6 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
         ActorRef originalActor;
         CompletableFuture future;
-        int count = 0;
 
         ParallelQueryProcessor(final Map<String, Searcher> searchers) {
             searchActors = new HashMap<String, ActorRef>();
@@ -379,7 +395,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         }).start();
 
         //waiting for the processor to output results
-        Future future = actorRef.sendRequestReplyFuture(node, 30000, null);
+        Future future = actorRef.sendRequestReplyFuture(node, Long.MAX_VALUE, null);
         future.await();
 
         if (future.isCompleted()) {
@@ -390,7 +406,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                 return (ResultSet) result;
             } else {
                 //problem -> something went wrong, must check what happened
-                System.out.println("Error here.");
+                System.out.println("Error: Result wasn't defined. Something went wrong.");
             }
         }
 

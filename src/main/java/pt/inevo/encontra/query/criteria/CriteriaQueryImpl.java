@@ -25,6 +25,7 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
     private final Class<T>  _resultClass;
     private PredicateImpl _where;
     private boolean  _distinct;
+    private int _limit;      //TO DO should be removed - here now just to keep coding
     private List<Order> _orders;
 
     public CriteriaQueryImpl(Class<T> resultClass) {
@@ -37,6 +38,12 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
     @Override
     public CriteriaQuery<T> distinct(boolean distinct) {
         _distinct = distinct;
+        return this;
+    }
+
+    @Override
+    public CriteriaQuery<T> limit(int value){
+        _limit = value;
         return this;
     }
 
@@ -101,8 +108,14 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
     /**
      * Affirms if selection of this query is distinct.
      */
+    @Override
     public boolean isDistinct() {
         return _distinct;
+    }
+
+    @Override
+    public int getLimit(){
+        return _limit;
     }
 
     /**

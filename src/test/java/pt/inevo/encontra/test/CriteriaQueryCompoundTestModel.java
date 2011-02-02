@@ -9,6 +9,7 @@ import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -21,8 +22,6 @@ import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.Query;
 //import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -115,29 +114,34 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         engine = new SimpleEngine<CompoundMetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setResultProvider(new SyncResultProvider());
 
         //Creating the searchers - searchers for native fields (not complex here)
         SimpleSearcher nameSeacher = new SimpleSearcher();
         nameSeacher.setDescriptorExtractor(descriptorExtractor);
         nameSeacher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        nameSeacher.setResultProvider(new SyncResultProvider());
 
         MetaTestModelSearcher<MetaTestModel> modelTestSearcher = new MetaTestModelSearcher<MetaTestModel>();
         modelTestSearcher.setQueryProcessor(new MetaTestModelQueryProcessor());
         modelTestSearcher.setObjectStorage(storage);
         modelTestSearcher.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        modelTestSearcher.setResultProvider(new SyncResultProvider());
 
         //A performQuery for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A performQuery for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         modelTestSearcher.getQueryProcessor().setSearcher("title", titleSearcher);

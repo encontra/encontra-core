@@ -1,6 +1,8 @@
 package pt.inevo.encontra.test.processors;
 
 import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.common.SyncResultProvider;
+import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
@@ -10,17 +12,10 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
-import pt.inevo.encontra.index.search.ParallelSimpleSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
-import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.query.Path;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 //import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;c
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 
@@ -51,22 +46,21 @@ public class QueryProcessorTest extends TestCase {
         //Creating the engine and setting its properties
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
-//        engine.setQueryProcessor(new QueryProcessorParallelLinearImpl());
-//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
-//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
 
         //Creating the searchers
         //A searcher for the "title"
-        ParallelSimpleSearcher titleSearcher = new ParallelSimpleSearcher();
+        SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the "content"
-        ParallelSimpleSearcher contentSearcher = new ParallelSimpleSearcher();
+        SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -81,6 +75,10 @@ public class QueryProcessorTest extends TestCase {
         engine.insert(new MetaTestModel("bab", "aba"));
         engine.insert(new MetaTestModel("bba", "aab"));
         engine.insert(new MetaTestModel("bbb", "aaa"));
+
+        for (int i = 0; i < 1000; i++) {
+            engine.insert(new MetaTestModel("aia", "bi"));
+        }
 
         //Creating a combined query for the results
         cb = new CriteriaBuilderImpl();
@@ -105,7 +103,7 @@ public class QueryProcessorTest extends TestCase {
 
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(
-                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true);
+                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true).limit(30);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -124,7 +122,8 @@ public class QueryProcessorTest extends TestCase {
         m.setId(Long.MIN_VALUE);
 
         //Create the Query
-        CriteriaQuery query = cb.createQuery().where(cb.similar(model, m)).distinct(true);
+        CriteriaQuery query = cb.createQuery().
+                where(cb.similar(model, m)).distinct(true).limit(20);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -147,7 +146,7 @@ public class QueryProcessorTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
                     cb.similar(model, m),
-                    cb.equal(titleModel, "aaa"))).distinct(true);
+                    cb.equal(titleModel, "aaa"))).distinct(true).limit(20);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -167,7 +166,7 @@ public class QueryProcessorTest extends TestCase {
         m.setId(Long.MIN_VALUE);
 
         //Create the Query
-        CriteriaQuery query = cb.createQuery().where(cb.equal(titleModel, "aaa")).distinct(true);
+        CriteriaQuery query = cb.createQuery().where(cb.equal(titleModel, "aaa")).distinct(true).limit(20);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

@@ -28,6 +28,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
     protected Map<Class, Class> operatorsNegation = new HashMap<Class, Class>();
     protected boolean negated = false;
     protected boolean distinct;
+    protected int limit;
 
     public QueryParserDefaultImpl() {
         super();
@@ -44,6 +45,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
             resetParser();
             CriteriaQueryImpl q = (CriteriaQueryImpl) query;
             distinct = q.isDistinct();
+            limit = q.getLimit();
             
             q.getRestriction().acceptVisit(this);
             return currentTopNode;
@@ -128,6 +130,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         QueryParserNode node = new QueryParserNode();
         PredicateImpl predicate = (PredicateImpl) expr;
         node.distinct = distinct;
+        node.limit = limit;
 
         if (predicate.isNegated() || negated || negatedParentNode != null) {
             node.predicateType = operatorsNegation.get(expr.getClass());
@@ -163,6 +166,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
         node.predicateType = expr.getClass();
         node.predicate = expr;
         node.distinct = distinct;
+        node.limit = limit;
 
         if (currentTopNode != null) {
             if (currentTopNode.predicateType.equals(And.class)

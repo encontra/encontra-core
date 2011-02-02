@@ -8,6 +8,7 @@ import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -17,8 +18,6 @@ import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
 //import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 
 /**
@@ -47,20 +46,21 @@ public class CriteriaQueryNotTest extends TestCase {
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
-//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setResultProvider(new SyncResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -95,7 +95,7 @@ public class CriteriaQueryNotTest extends TestCase {
         //Create the Query
         MetaTestModel m = new MetaTestModel("aaa", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.not(cb.equal(model, m)));
+        CriteriaQuery query = cb.createQuery().where(cb.not(cb.equal(model, m))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -116,7 +116,7 @@ public class CriteriaQueryNotTest extends TestCase {
 
         MetaTestModel m = new MetaTestModel("aaaj", "bbb");
         m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.not(cb.similar(model, m)));
+        CriteriaQuery query = cb.createQuery().where(cb.not(cb.similar(model, m))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -136,7 +136,7 @@ public class CriteriaQueryNotTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
 
-        CriteriaQuery query = criteriaQuery.where(cb.not(cb.equal(titleModel, "aaa")));
+        CriteriaQuery query = criteriaQuery.where(cb.not(cb.equal(titleModel, "aaa"))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -160,7 +160,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
                     cb.not(cb.equal(titleModel, "aaa")),
-                    cb.equal(contentModel, "bbb")));
+                    cb.equal(contentModel, "bbb"))).distinct(true).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -184,7 +184,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
                     cb.not(cb.equal(titleModel, "aaa")),
-                    cb.equal(contentModel, "bba")));
+                    cb.equal(contentModel, "bba"))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -208,7 +208,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
                     cb.equal(titleModel, "aaa"),
-                    cb.not(cb.equal(contentModel, "bba")))).distinct(true);
+                    cb.not(cb.equal(contentModel, "bba")))).distinct(true).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -233,7 +233,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.not(cb.or(
                 cb.equal(titleModel, "aaa"),
-                cb.equal(contentModel, "bba"))));
+                cb.equal(contentModel, "bba")))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -258,7 +258,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.not(cb.and(
                     cb.equal(titleModel, "aaa"),
-                    cb.equal(contentModel, "bba")))).distinct(true);
+                    cb.equal(contentModel, "bba")))).distinct(true).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -283,7 +283,7 @@ public class CriteriaQueryNotTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
                     cb.not(cb.equal(titleModel, "aaa")),
-                    cb.not(cb.equal(contentModel, "bba"))));
+                    cb.not(cb.equal(contentModel, "bba")))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -310,7 +310,7 @@ public class CriteriaQueryNotTest extends TestCase {
                     cb.not(cb.equal(titleModel, "aaa")),
                     cb.or(
                         cb.equal(contentModel, "bba"))),
-                        cb.similar(titleModel, "absga"));
+                        cb.similar(titleModel, "absga")).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
@@ -323,7 +323,6 @@ public class CriteriaQueryNotTest extends TestCase {
 
     @Test
     public void test11() {
-        // TODO if we negate something that is already negate it should return the original
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
@@ -332,7 +331,7 @@ public class CriteriaQueryNotTest extends TestCase {
 
         //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
         CriteriaQuery query = cb.createQuery().where(
-                cb.not(cb.not(cb.equal(titleModel, "aaa"))));
+                cb.not(cb.not(cb.equal(titleModel, "aaa")))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

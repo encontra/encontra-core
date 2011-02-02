@@ -4,15 +4,23 @@ import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 
 /**
- *
+ * Example of a simple descriptor for test purposes
  * @author Ricardo
  */
-//Example of a simple descriptor for test purposes
 public class ExampleDescriptor extends SimpleDescriptor {
 
     @Override
     public double getDistance(Descriptor other) {
         return getLevenshteinDistance(getValue(), (String) other.getValue());
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (o instanceof ExampleDescriptor) {
+            if (this.getId().equals(((ExampleDescriptor)o).getId()))
+                return true;
+            else return false;
+        } else return false;
     }
 
     public int getLevenshteinDistance(String s, String t) {

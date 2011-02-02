@@ -8,6 +8,7 @@ import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -18,8 +19,6 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 //import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorParallelImpl;
 import pt.inevo.encontra.storage.*;
 
 /**
@@ -48,20 +47,23 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        engine.setQueryProcessor(new QueryProcessorParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setResultProvider(new SyncResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        titleSearcher.setResultProvider(new SyncResultProvider());
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
+        contentSearcher.setResultProvider(new SyncResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -102,7 +104,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         CriteriaQuery query = cb.createQuery().where(
                 cb.or(
                 titleSimilarityClause,
-                contentSimilarityClause)).distinct(true);
+                contentSimilarityClause)).distinct(true).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -128,7 +130,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.and(
                 cb.similar(titleModel, "aabbaa"),
                 cb.similar(contentModel, "bbbabab")),
-                cb.similar(model, m))).distinct(true);
+                cb.similar(model, m))).distinct(true).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -155,7 +157,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.or(
                 cb.similar(titleModel, "aabbaa"),
                 cb.similar(contentModel, "bbbabab")),
-                cb.similar(model, m))).distinct(true);
+                cb.similar(model, m))).distinct(true).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -182,7 +184,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                 cb.and(
                 cb.similar(titleModel, "aabbaa"),
                 cb.similar(contentModel, "bbb")),
-                cb.similar(model, m))).distinct(true);
+                cb.similar(model, m))).distinct(true).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -209,7 +211,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                     cb.and(
                         cb.equal(titleModel, "aabbaa"),
                         cb.similar(contentModel, "bbb")),
-                    cb.similar(model, m)));
+                    cb.similar(model, m))).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -236,7 +238,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                     cb.and(
                         cb.not(cb.equal(titleModel, "aaa")),
                         cb.similar(contentModel, "bbb")),
-                    cb.equal(model, m)));
+                    cb.equal(model, m))).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -263,7 +265,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                     cb.and(
                         cb.not(cb.equal(titleModel, "aaa")),
                         cb.not(cb.equal(contentModel, "bba"))),
-                    cb.equal(model, m)));
+                    cb.equal(model, m))).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
@@ -290,7 +292,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
                     cb.and(
                         cb.not(cb.equal(titleModel, "aaa")),
                         cb.equal(contentModel, "bba")),
-                    cb.equal(model, m)))).distinct(true);
+                    cb.equal(model, m)))).distinct(true).limit(8);
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
