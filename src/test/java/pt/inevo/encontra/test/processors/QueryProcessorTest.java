@@ -1,7 +1,7 @@
 package pt.inevo.encontra.test.processors;
 
+import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.query.*;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
@@ -54,13 +54,13 @@ public class QueryProcessorTest extends TestCase {
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        titleSearcher.setResultProvider(new SyncResultProvider());
+        titleSearcher.setResultProvider(new DefaultResultProvider());
 
         //A searcher for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        contentSearcher.setResultProvider(new SyncResultProvider());
+        contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);

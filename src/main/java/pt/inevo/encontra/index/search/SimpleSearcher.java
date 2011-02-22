@@ -60,7 +60,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             //make the query
             if (node.predicateType.equals(Similar.class)) {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, node.limit);
+                results = performKnnQuery(d, index.getEntryProvider().size());
             } else if (node.predicateType.equals(Equal.class)) {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, true);

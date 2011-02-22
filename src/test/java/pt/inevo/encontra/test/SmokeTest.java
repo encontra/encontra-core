@@ -1,13 +1,14 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
+import pt.inevo.encontra.index.search.ParallelSimpleSearcher;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
-import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
 import pt.inevo.encontra.index.*;
@@ -20,6 +21,8 @@ import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.storage.*;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
+
+import java.util.Calendar;
 
 /**
  * Smoke test: testing the creation of an engine and the search for similar
@@ -50,20 +53,22 @@ public class SmokeTest extends TestCase {
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
-        engine.setResultProvider(new SyncResultProvider());
+        engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
-        SimpleSearcher titleSearcher = new SimpleSearcher();
+//        SimpleSearcher titleSearcher = new SimpleSearcher();
+        ParallelSimpleSearcher titleSearcher = new ParallelSimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        titleSearcher.setResultProvider(new SyncResultProvider());
+        titleSearcher.setResultProvider(new DefaultResultProvider());
 
         //A searcher for the "content"
-        SimpleSearcher contentSearcher = new SimpleSearcher();
+//        SimpleSearcher contentSearcher = new SimpleSearcher();
+        ParallelSimpleSearcher contentSearcher = new ParallelSimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        contentSearcher.setResultProvider(new SyncResultProvider());
+        contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
         engine.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -95,9 +100,12 @@ public class SmokeTest extends TestCase {
 
         Expression<Boolean> similar = cb.similar(model, testObject);
         CriteriaQuery query = cb.createQuery().where(similar).distinct(true).limit(20);
-        ResultSet<MetaTestModel> results = engine.search(query);
 
         //Searching in the engine for the results
+        long timeBefore = Calendar.getInstance().getTimeInMillis();
+        ResultSet<MetaTestModel> results = engine.search(query);
+        long timeAfter = Calendar.getInstance().getTimeInMillis();
+        System.out.println("Search took: " + (timeAfter - timeBefore));
         printResults(results);
     }
 
@@ -118,8 +126,10 @@ public class SmokeTest extends TestCase {
                 cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true).limit(20);
 
         //Searching in the engine for the results
+        long timeBefore = Calendar.getInstance().getTimeInMillis();
         ResultSet<MetaTestModel> results = engine.search(query);
-
+        long timeAfter = Calendar.getInstance().getTimeInMillis();
+        System.out.println("Search took: " + (timeAfter - timeBefore));
         printResults(results);
     }
 
@@ -140,8 +150,10 @@ public class SmokeTest extends TestCase {
                 cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true).limit(20);
 
         //Searching in the engine for the results
+        long timeBefore = Calendar.getInstance().getTimeInMillis();
         ResultSet<MetaTestModel> results = engine.search(query);
-
+        long timeAfter = Calendar.getInstance().getTimeInMillis();
+        System.out.println("Search took: " + (timeAfter - timeBefore));
         printResults(results);
     }
 

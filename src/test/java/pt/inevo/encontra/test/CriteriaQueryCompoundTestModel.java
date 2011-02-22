@@ -1,7 +1,9 @@
 package pt.inevo.encontra.test;
 
+import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
 import java.util.List;
+
 import pt.inevo.encontra.test.entities.CompoundMetaTestModel;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 import pt.inevo.encontra.descriptors.DescriptorExtractor;
@@ -9,7 +11,6 @@ import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
-import pt.inevo.encontra.common.SyncResultProvider;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
@@ -114,34 +115,32 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         engine = new SimpleEngine<CompoundMetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-//        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
-//        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
-        engine.setResultProvider(new SyncResultProvider());
+        engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers - searchers for native fields (not complex here)
         SimpleSearcher nameSeacher = new SimpleSearcher();
         nameSeacher.setDescriptorExtractor(descriptorExtractor);
         nameSeacher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        nameSeacher.setResultProvider(new SyncResultProvider());
+        nameSeacher.setResultProvider(new DefaultResultProvider());
 
         MetaTestModelSearcher<MetaTestModel> modelTestSearcher = new MetaTestModelSearcher<MetaTestModel>();
         modelTestSearcher.setQueryProcessor(new MetaTestModelQueryProcessor());
         modelTestSearcher.setObjectStorage(storage);
         modelTestSearcher.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
-        modelTestSearcher.setResultProvider(new SyncResultProvider());
+        modelTestSearcher.setResultProvider(new DefaultResultProvider());
 
         //A performQuery for the "title"
         SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        titleSearcher.setResultProvider(new SyncResultProvider());
+        titleSearcher.setResultProvider(new DefaultResultProvider());
 
         //A performQuery for the "content"
         SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
-        contentSearcher.setResultProvider(new SyncResultProvider());
+        contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
         modelTestSearcher.getQueryProcessor().setSearcher("title", titleSearcher);
@@ -286,7 +285,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         Expression<Boolean> contentClause = cb.similar(contentModelPath, "aab");
 
         //Create the Query;
-        CriteriaQuery query = cb.createQuery().where(cb.and(equalClause, contentClause));
+        CriteriaQuery query = cb.createQuery().where(cb.and(equalClause, contentClause)).distinct(true).limit(8);
 
         //Searching in the engine for the results
         ResultSet<CompoundMetaTestModel> results = engine.search(query);
@@ -310,7 +309,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         Expression<Boolean> contentClause = cb.similar(contentModelPath, "aab");
 
         //Create the Query;
-        CriteriaQuery query = cb.createQuery().where(cb.and(equalClause, contentClause)).distinct(true);
+        CriteriaQuery query = cb.createQuery().where(cb.and(equalClause, contentClause)).distinct(true).limit(8);
 
         //Searching in the engine for the results
         ResultSet<CompoundMetaTestModel> results = engine.search(query);

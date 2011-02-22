@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * SyncResultProvider. Actually it's just being used as a proxy interface.
+ * DefaultResultProvider. Actually it's just being used as a proxy interface.
  * @author Ricardo
  */
-public class SyncResultProvider implements ResultProvider {
+public class DefaultResultProvider implements ResultProvider {
 
     protected ResultSet resultSet;
     protected List<ResultSetListener> listeners;
 
-    public SyncResultProvider() {
+    public DefaultResultProvider() {
         listeners = new ArrayList<ResultSetListener>();
     }
 
-    public SyncResultProvider(ResultSet set) {
+    public DefaultResultProvider(ResultSet set) {
         listeners = new ArrayList<ResultSetListener>();
         this.resultSet = set;
         this.resultSet.registerListener(this);
