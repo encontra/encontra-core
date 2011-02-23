@@ -28,8 +28,7 @@ import pt.inevo.encontra.storage.IEntry;
 import scala.Option;
 
 /**
- * Default implementation for the query processor.
- *
+ * Parallel implementation for the query processor, with a ResultSetListener for watching the searchers steps.
  * @author Ricardo
  */
 public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcessor<E> {
@@ -41,31 +40,6 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
         super();
         combiner = new ResultSetOperations();
         queryParser = new QueryParserDefaultImpl();
-    }
-
-    /**
-     * Searches for a simple query in the given searcher.
-     * It's just used to encapsulate the call to the specific searcher.
-     */
-    class SimpleParallelSearcherActor extends UntypedActor {
-
-        protected Searcher searcher;
-        protected ResultSet results;
-
-        public SimpleParallelSearcherActor(Searcher searcher) {
-            this.searcher = searcher;
-        }
-
-        @Override
-        public void onReceive(Object message) throws Exception {
-            if (message instanceof Query) {
-                //searches the query
-                Query query = (Query) message;
-                results = searcher.search(query);
-                //return the results
-                getContext().replySafe(results);
-            }
-        }
     }
 
     class BooleanSearcherActor extends UntypedActor implements ResultSetListener<E> {
@@ -82,7 +56,7 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
         protected int resultPartsCount = 0, previousPartsCount = 0;
         protected Map<Serializable, Entry> map;
 
-        class Entry{
+        class Entry {
 
             Result<E> id;
             List<Searcher> result;
@@ -100,7 +74,7 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
                 this.id = id;
             }
 
-            public Result<E> getId(){
+            public Result<E> getId() {
                 return id;
             }
         }
@@ -111,15 +85,15 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
             runningActors = new HashMap<ActorRef, QueryParserNode>();
 
             //register for receive updates
-            for (Searcher s : searcherMap.values()){
+            for (Searcher s : searcherMap.values()) {
                 s.getResultProvider().registerListener(this);
             }
             map = new HashMap<Serializable, Entry>();
         }
 
         @Override
-        public void handleEvent(ResultSetEvent<E> event){
-            if (event.getEvent().equals(ResultSetEvent.Event.ADDED)){
+        public void handleEvent(ResultSetEvent<E> event) {
+            if (event.getEvent().equals(ResultSetEvent.Event.ADDED)) {
                 Serializable id = event.getResult().getResultObject().getId();
                 if (map.containsKey(id)) {
                     Entry e = map.get(id);
@@ -303,32 +277,25 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
                         //in the end we must have the elements we desire
                         newQueryPath = newQueryPath.get(node.field);
 
-                        possibleAnswers = 1;
+                        Searcher searcher = searcherMap.get(parentField);
+                        ResultSet resultSet = searcher.search(createSubQuery(node, newQueryPath, node.fieldObject));
 
-                        final String searcherName = parentField;
-                        ActorRef searcher = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                            @Override
-                            public UntypedActor create() {
-                                return new SimpleParallelSearcherActor(searcherMap.get(searcherName));
-                            }
-                        }).start();
-
-                        searcher.sendOneWay(createSubQuery(node, newQueryPath, node.fieldObject), getContext());
+                        if (originalActor != null) {
+                            originalActor.sendOneWay(resultSet);
+                        } else {
+                            future.completeWithResult(resultSet);
+                        }
 
                     } else {
-                        possibleAnswers = 1;
 
-                        final String searcherName = node.field;
-                        ActorRef searcher = UntypedActor.actorOf(new UntypedActorFactory() {
+                        Searcher searcher = searcherMap.get(node.field);
+                        ResultSet resultSet = searcher.search(createSubQuery(node, parentPath, node.fieldObject));
 
-                            @Override
-                            public UntypedActor create() {
-                                return new SimpleParallelSearcherActor(searcherMap.get(searcherName));
-                            }
-                        }).start();
-
-                        searcher.sendOneWay(createSubQuery(node, parentPath, node.fieldObject), getContext());
+                        if (originalActor != null) {
+                            originalActor.sendOneWay(resultSet);
+                        } else {
+                            future.completeWithResult(resultSet);
+                        }
                     }
                 } else {
                     //don't know which searchers to use, so lets dig a bit
@@ -354,16 +321,7 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
                                 subModelPath = subModelPath.get(fieldName);
                             }
 
-                            final String searcherName = fieldName;
-                            ActorRef searcher = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                                @Override
-                                public UntypedActor create() {
-                                    return new SimpleParallelSearcherActor(searcherMap.get(searcherName));
-                                }
-                            }).start();
-
-                            searcher.sendOneWay(createSubQuery(node, subModelPath, obj.getValue()), getContext());
+                            getContext().sendOneWay(createSubQuery(node, subModelPath, obj.getValue()), getContext());
                         }
 
                     } catch (IndexingException e) {
@@ -391,91 +349,40 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
         }
     }
 
-    class ParallelQueryProcessor extends UntypedActor {
-
-        ResultSetOperations combiner = new ResultSetOperations();
-        List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
-        ActorRef originalActor;
-        CompletableFuture future;
-        int previousResultsSize = 0;
-        QueryParserNode node;
-        ActorRef runningActor;
-
-        ParallelQueryProcessor() {
-        }
-
-        @Override
-        public void onReceive(Object message) throws Exception {
-            if (message instanceof QueryParserNode) {
-                node = (QueryParserNode) message;
-
-                if (getContext().getSenderFuture().isDefined()) {
-                    future = (CompletableFuture) getContext().getSenderFuture().get();
-                } else if (getContext().getSender().isDefined()) {
-                    originalActor = (ActorRef) getContext().getSender().get();
-                }
-
-                if (node.predicateType.equals(And.class)
-                        || node.predicateType.equals(Or.class)) {
-                    runningActor = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                        @Override
-                        public UntypedActor create() {
-                            return new BooleanSearcherActor();
-                        }
-                    }).start();
-
-                    runningActor.sendOneWay(message, getContext());
-                } else if (node.predicateType.equals(Similar.class)
-                        || node.predicateType.equals(Equal.class)
-                        || node.predicateType.equals(NotEqual.class)) {
-                    ActorRef actorRef = UntypedActor.actorOf(new UntypedActorFactory() {
-
-                        @Override
-                        public UntypedActor create() {
-                            return new SimilarEqualParallelSearcherActor();
-                        }
-                    }).start();
-
-                    actorRef.sendOneWay(message, getContext());
-                }
-
-            } else if (message instanceof ResultSet) {
-                ResultSet set = (ResultSet) message;
-
-                if (originalActor != null) {
-                    originalActor.sendOneWay(set);
-                } else {
-                    future.completeWithResult(set);
-                }
-
-            }
-        }
-    }
-
     @Override
     public ResultSet process(QueryParserNode node) {
 
-        ResultSet<E> results = new ResultSetDefaultImpl<E>();
+              ActorRef runningActor = null;
+        if (node.predicateType.equals(And.class)
+                || node.predicateType.equals(Or.class)) {
+            runningActor = UntypedActor.actorOf(new UntypedActorFactory() {
 
-        //creating the parallel query processor actor
-        ActorRef actorRef = UntypedActor.actorOf(new UntypedActorFactory() {
+                @Override
+                public UntypedActor create() {
+                    return new BooleanSearcherActor();
+                }
+            }).start();
+        } else if (node.predicateType.equals(Similar.class)
+                || node.predicateType.equals(Equal.class)
+                || node.predicateType.equals(NotEqual.class)) {
+            runningActor = UntypedActor.actorOf(new UntypedActorFactory() {
 
-            @Override
-            public UntypedActor create() {
-                return new ParallelQueryProcessor();
-            }
-        }).start();
+                @Override
+                public UntypedActor create() {
+                    return new SimilarEqualParallelSearcherActor();
+                }
+            }).start();
+        }
 
-        long start = Calendar.getInstance().getTimeInMillis();
+        long begin = Calendar.getInstance().getTimeInMillis();
 
         //waiting for the processor to output results
-        Future future = actorRef.sendRequestReplyFuture(node, Long.MAX_VALUE, null);
+        Future future = runningActor.sendRequestReplyFuture(node, Long.MAX_VALUE, null);
         future.await();
 
         long end = Calendar.getInstance().getTimeInMillis();
 
-        System.out.println("Process Took: " + (end-start));
+        System.out.println("Process took: " + (end - begin));
 
         if (future.isCompleted()) {
             Option resultOption = future.result();
@@ -489,7 +396,8 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
             }
         }
 
-        return results;
+        //something went wrong so return an empty result set
+        return new ResultSetDefaultImpl<E>();
     }
 }
 
