@@ -229,21 +229,13 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                         Searcher searcher = searcherMap.get(parentField);
                         ResultSet resultSet = searcher.search(createSubQuery(node, newQueryPath, node.fieldObject));
 
-                        if (originalActor != null) {
-                            originalActor.sendOneWay(resultSet);
-                        } else {
-                            future.completeWithResult(resultSet);
-                        }
+                        getContext().sendOneWay(resultSet, getContext());
 
                     } else {
                         Searcher searcher = searcherMap.get(node.field);
                         ResultSet resultSet = searcher.search(createSubQuery(node, parentPath, node.fieldObject));
 
-                        if (originalActor != null) {
-                            originalActor.sendOneWay(resultSet);
-                        } else {
-                            future.completeWithResult(resultSet);
-                        }
+                        getContext().sendOneWay(resultSet, getContext());
                     }
                 } else {
                     //don't know which searchers to use, so lets dig a bit

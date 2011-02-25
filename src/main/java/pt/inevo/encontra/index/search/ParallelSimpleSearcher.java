@@ -32,18 +32,8 @@ import scala.Option;
  */
 public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
-    protected DescriptorExtractor extractor;
-
     public ParallelSimpleSearcher() {
         queryProcessor = new QueryProcessorDefaultImpl();
-    }
-
-    public void setDescriptorExtractor(DescriptorExtractor extractor) {
-        this.extractor = extractor;
-    }
-
-    public DescriptorExtractor getDescriptorExtractor() {
-        return extractor;
     }
 
     @Override
