@@ -93,8 +93,8 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         }
 
         @Override
-        protected Result getResultObject(Result<IEntry> entryResult) {
-            return new Result<O>((O) storage.get(entryResult.getResultObject().getId()));
+        protected Result getResultObject(Result<IEntry> entryResult, String criteria) {
+            return new Result<O>((O) storage.get(entryResult.getResultObject().getId(), criteria));
         }
     }
 

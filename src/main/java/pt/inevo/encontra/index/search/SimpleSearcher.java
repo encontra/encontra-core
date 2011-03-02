@@ -17,6 +17,8 @@ import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
+import javax.persistence.criteria.Expression;
+
 /**
  * Simple searcher
  */
@@ -68,11 +70,11 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, false);
             } else {
-                return getResultObjects(queryProcessor.search(query));
+                return getResultObjects(queryProcessor.search(query), null);
             }
         }
 
-        return getResultObjects(results);
+        return getResultObjects(results, null);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -127,7 +129,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> entryResult) {
+    protected Result<O> getResultObject(Result<IEntry> entryResult, String criteria) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) entryResult.getResultObject()));
     }
 }

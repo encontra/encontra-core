@@ -1,5 +1,7 @@
 package pt.inevo.encontra.storage;
 
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +17,11 @@ public class SimpleObjectStorage<ID extends Number,O extends IEntity<ID>> extend
 
     @Override
     public O get(ID id) {
+        return map.get(id);
+    }
+
+    @Override
+    public O get(ID id, String criteria) {
         return map.get(id);
     }
 

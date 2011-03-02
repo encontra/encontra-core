@@ -1,7 +1,6 @@
 package pt.inevo.encontra.index.search;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import akka.actor.ActorRef;
@@ -10,7 +9,6 @@ import akka.actor.UntypedActorFactory;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
 import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.index.EntryProvider;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
@@ -26,6 +24,8 @@ import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 import scala.Option;
+
+import javax.persistence.criteria.Expression;
 
 /**
  * Parallel Simple searcher
@@ -68,11 +68,11 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, false);
             } else {
-                return getResultObjects(queryProcessor.search(query));
+                return getResultObjects(queryProcessor.search(query), null);
             }
         }
 
-        return getResultObjects(results);
+        return getResultObjects(results, null);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -159,7 +159,7 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
+    protected Result<O> getResultObject(Result<IEntry> indexEntryresult, String criteria) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
     }
 

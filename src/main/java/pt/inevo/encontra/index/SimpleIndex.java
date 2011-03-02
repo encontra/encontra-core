@@ -7,6 +7,9 @@ import java.util.List;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+
 /**
  * A linear implementation of an Index.
  * @author ricardo
@@ -154,6 +157,11 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
 
     @Override
     public IEntity get(Serializable id) {
+        return null;  //TO DO
+    }
+
+    @Override
+    public IEntity get(Serializable id, String criteria) {
         return null;  //TO DO
     }
 
