@@ -70,11 +70,11 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, false);
             } else {
-                return getResultObjects(queryProcessor.search(query), null);
+                return getResultObjects(queryProcessor.search(query));
             }
         }
 
-        return getResultObjects(results, null);
+        return getResultObjects(results);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -129,7 +129,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> entryResult, String criteria) {
+    protected Result<O> getResultObject(Result<IEntry> entryResult) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) entryResult.getResultObject()));
     }
 }

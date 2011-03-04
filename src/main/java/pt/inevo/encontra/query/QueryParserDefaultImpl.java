@@ -3,17 +3,9 @@ package pt.inevo.encontra.query;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
-import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.query.criteria.ExpressionVisitor;
-import pt.inevo.encontra.query.criteria.PredicateImpl;
-import pt.inevo.encontra.query.criteria.exps.And;
-import pt.inevo.encontra.query.criteria.exps.Constant;
-import pt.inevo.encontra.query.criteria.exps.Equal;
-import pt.inevo.encontra.query.criteria.exps.Not;
-import pt.inevo.encontra.query.criteria.exps.NotEqual;
-import pt.inevo.encontra.query.criteria.exps.Or;
-import pt.inevo.encontra.query.criteria.exps.Similar;
+
+import pt.inevo.encontra.query.criteria.*;
+import pt.inevo.encontra.query.criteria.exps.*;
 
 /**
  * Default implementation of an internal parser for the CriteriaQuery.
@@ -29,6 +21,7 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
     protected boolean negated = false;
     protected boolean distinct;
     protected int limit;
+    protected StorageCriteria criteria;
 
     public QueryParserDefaultImpl() {
         super();
@@ -46,8 +39,11 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
             CriteriaQueryImpl q = (CriteriaQueryImpl) query;
             distinct = q.isDistinct();
             limit = q.getLimit();
-            
+            criteria = q.getCriteria();
+
             q.getRestriction().acceptVisit(this);
+
+            currentTopNode.criteria = criteria;
             return currentTopNode;
         } else {
             //just for having an empty node

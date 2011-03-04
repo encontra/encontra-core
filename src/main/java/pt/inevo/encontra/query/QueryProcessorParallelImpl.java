@@ -14,6 +14,7 @@ import pt.inevo.encontra.common.*;
 import pt.inevo.encontra.engine.QueryProcessor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.IndexingException;
+import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
@@ -42,11 +43,17 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
         queryParser = new QueryParserDefaultImpl();
     }
 
+    @Override
+    public void setTopSearcher(AbstractSearcher topSearcher) {
+        super.setTopSearcher(topSearcher);
+        combiner.setStorage(topSearcher.getObjectStorage());
+    }
+
     class BooleanSearcherActor extends UntypedActor implements ResultSetListener<E> {
 
         protected int numAnswers, possibleAnswers;
         protected List results;
-        protected ResultSetOperations combiner;
+//        protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected QueryParserNode node;
@@ -80,7 +87,7 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
         }
 
         public BooleanSearcherActor() {
-            combiner = new ResultSetOperations();
+//            combiner = new ResultSetOperations();
             results = new ArrayList<ResultSetDefaultImpl>();
             runningActors = new HashMap<ActorRef, QueryParserNode>();
 
@@ -174,9 +181,9 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
                     ResultSet combinedResultSet;
 
                     if (node.predicateType.equals(And.class)) {
-                        combinedResultSet = combiner.intersect(results, originalLimit);
+                        combinedResultSet = combiner.intersect(results, originalLimit, node.criteria);
                     } else {
-                        combinedResultSet = combiner.join(results, node.distinct, originalLimit);
+                        combinedResultSet = combiner.join(results, node.distinct, originalLimit, node.criteria);
                     }
                     results.clear();
 
@@ -206,13 +213,13 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
         protected int numAnswers, possibleAnswers;
         protected List partResults;
         protected ResultSet results;
-        protected ResultSetOperations combiner;
+//        protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected QueryParserNode node;
 
         public SimilarEqualParallelSearcherActor() {
-            combiner = new ResultSetOperations();
+//            combiner = new ResultSetOperations();
             partResults = new ArrayList<ResultSetDefaultImpl>();
         }
 
@@ -337,7 +344,7 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
 
                 if (numAnswers >= possibleAnswers) {
 
-                    results = combiner.intersect(partResults, node.limit);
+                    results = combiner.intersect(partResults, node.limit, node.criteria);
 
                     if (originalActor != null) {
                         originalActor.sendOneWay(results);
@@ -352,7 +359,7 @@ public class QueryProcessorParallelImpl<E extends IEntity> extends QueryProcesso
     @Override
     public ResultSet process(QueryParserNode node) {
 
-              ActorRef runningActor = null;
+        ActorRef runningActor = null;
         if (node.predicateType.equals(And.class)
                 || node.predicateType.equals(Or.class)) {
             runningActor = UntypedActor.actorOf(new UntypedActorFactory() {

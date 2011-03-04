@@ -27,6 +27,7 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
     private boolean  _distinct;
     private int _limit;      //TO DO should be removed - here now just to keep coding
     private List<Order> _orders;
+    private StorageCriteria criteria;
 
     public CriteriaQueryImpl(Class<T> resultClass) {
         this._resultClass = resultClass;
@@ -39,6 +40,17 @@ public class CriteriaQueryImpl<T> implements CriteriaQuery<T>, Query {
     public CriteriaQuery<T> distinct(boolean distinct) {
         _distinct = distinct;
         return this;
+    }
+
+    @Override
+    public CriteriaQuery<T> setCriteria(StorageCriteria criteria){
+        this.criteria = criteria;
+        return this;
+    }
+
+    @Override
+    public StorageCriteria getCriteria(){
+        return criteria;
     }
 
     @Override

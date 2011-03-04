@@ -20,9 +20,9 @@ public abstract class UnaryFunctionalExpression<X> extends ExpressionImpl<X> {
         this.e  = (ExpressionImpl<?>)e;
     }
 
-    //public UnaryFunctionalExpression(Expression<X> e) {
-    //    this((Class<X>)e.getJavaType(), e);
-    //}
+//    public UnaryFunctionalExpression(Expression<X> e) {
+//        this((Class<X>)e.getJavaType(), e);
+//    }
 
     public void acceptVisit(ExpressionVisitor visitor) {
         Expressions.acceptVisit(visitor, this, e);

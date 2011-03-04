@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import pt.inevo.encontra.query.criteria.StorageCriteria;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 
@@ -161,8 +163,13 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
     }
 
     @Override
-    public IEntity get(Serializable id, String criteria) {
-        return null;  //TO DO
+    public boolean validate(Serializable id, StorageCriteria criteria) {
+        return false;  //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    public List<Serializable> getValidIds(StorageCriteria criteria){
+        return null;
     }
 
     @Override

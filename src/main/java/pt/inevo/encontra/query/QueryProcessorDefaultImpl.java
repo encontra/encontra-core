@@ -9,6 +9,7 @@ import pt.inevo.encontra.index.IndexingException;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
+import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
@@ -27,12 +28,18 @@ import pt.inevo.encontra.storage.IEntity;
 public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor<E> {
 
     protected Class resultClass;
-    ResultSetOperations combiner;
+    protected ResultSetOperations combiner;
 
     public QueryProcessorDefaultImpl() {
         super();
         combiner = new ResultSetOperations();
         queryParser = new QueryParserDefaultImpl();
+    }
+
+    @Override
+    public void setTopSearcher(AbstractSearcher topSearcher) {
+        super.setTopSearcher(topSearcher);
+        combiner.setStorage(topSearcher.getObjectStorage());
     }
 
     @Override
@@ -43,28 +50,37 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
         if (node.predicateType.equals(And.class)) {
             List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
             List<QueryParserNode> nodes = node.childrenNodes;
-            int previousResultSize = -1, partsSize = 0, previousPartsSize = -1;
 
-            for (int newLimit = node.limit*2; results.getSize() < node.limit && previousResultSize < results.getSize()
-                    && previousPartsSize < partsSize ; newLimit *= 2, resultsParts.clear()) {
-                previousResultSize = (results.getSize() == 0 ? -1 : results.getSize());
-                previousPartsSize = partsSize;
-                partsSize = 0;
-                for (QueryParserNode n : nodes) {
-                    n.limit = newLimit;   //lets increase the limit to speed up the combination
-                    ResultSet<E> r = process(n);
-                    partsSize += r.getSize();
-                    resultsParts.add(r);
-                }
-                results = combiner.intersect(resultsParts, node.limit);
+            for (QueryParserNode n : nodes) {
+                ResultSet<E> r = process(n);
+                resultsParts.add(r);
             }
+
+            results = combiner.intersect(resultsParts, node.limit, node.criteria);
+
+            //this should be the real code, because can handle the searchers that don't retrieve enough results
+//            int previousResultSize = -1, partsSize = 0, previousPartsSize = -1;
+//
+//            for (int newLimit = node.limit*2; results.getSize() < node.limit && previousResultSize < results.getSize()
+//                    && previousPartsSize < partsSize ; newLimit *= 2, resultsParts.clear()) {
+//                previousResultSize = (results.getSize() == 0 ? -1 : results.getSize());
+//                previousPartsSize = partsSize;
+//                partsSize = 0;
+//                for (QueryParserNode n : nodes) {
+//                    n.limit = newLimit;   //lets increase the limit to speed up the combination
+//                    ResultSet<E> r = process(n);
+//                    partsSize += r.getSize();
+//                    resultsParts.add(r);
+//                }
+//                results = combiner.intersect(resultsParts, node.limit, node.criteria);
+//            }
         } else if (node.predicateType.equals(Or.class)) {
             List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
             List<QueryParserNode> nodes = node.childrenNodes;
             for (QueryParserNode n : nodes) {
                 resultsParts.add(process(n));
             }
-            results = combiner.join(resultsParts, node.distinct, node.limit);
+            results = combiner.join(resultsParts, node.distinct, node.limit, node.criteria);
         } else if (node.predicateType.equals(Similar.class)
                 || node.predicateType.equals(Equal.class)
                 || node.predicateType.equals(NotEqual.class)) {
@@ -104,7 +120,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
 
                     //in the end we must have the elements we desire
                     newQueryPath = newQueryPath.get(node.field);
-                    return s.search(createSubQuery(node, newQueryPath, node.fieldObject));
+                    results = s.search(createSubQuery(node, newQueryPath, node.fieldObject));
 
                 } else {
                     //get the respective searcher
@@ -120,7 +136,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                     int initialLimit = node.limit;
 
                     for ( ; results.getSize() < node.limit && previousResultSize < results.getSize();
-                            previousResultSize = results.getSize(), node.limit *= 2) {
+                          previousResultSize = results.getSize(), node.limit *= 2) {
 
                         for (IndexedObject obj : indexedObjects) {
                             String fieldName = obj.getName();
@@ -144,7 +160,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
                             resultsParts.add(s.search(createSubQuery(node, subModelPath, obj.getValue())));
                         }
 
-                        results = combiner.intersect(resultsParts, initialLimit);
+                        results = combiner.intersect(resultsParts, initialLimit, node.criteria);
                     }
 
                 } catch (IndexingException e) {
@@ -153,7 +169,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends QueryProcessor
             }
         }
 
-        return results;
+        return results.getFirstResults(node.limit);
     }
 
     //Creates a sub-query for Equal, Similar and NoEqual, given a node

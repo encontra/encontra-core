@@ -15,7 +15,7 @@ import javax.persistence.criteria.Expression;
 public class SimpleEngine<O extends IEntity> extends AbstractSearcher<O> {
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> entryresult, String criteria) {
-        return new Result<O>((O) storage.get(entryresult.getResultObject().getId(), criteria));
+    protected Result<O> getResultObject(Result<IEntry> entryresult) {
+        return new Result<O>((O) storage.get(entryresult.getResultObject().getId()));
     }
 }

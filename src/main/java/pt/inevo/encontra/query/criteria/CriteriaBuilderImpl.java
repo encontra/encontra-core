@@ -91,5 +91,4 @@ public class CriteriaBuilderImpl implements ExpressionParser{
     public Predicate similar(Object x, Object y) {
         return new Similar(x, y);
     }
-
 }

@@ -68,11 +68,11 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, false);
             } else {
-                return getResultObjects(queryProcessor.search(query), null);
+                return getResultObjects(queryProcessor.search(query));
             }
         }
 
-        return getResultObjects(results, null);
+        return getResultObjects(results);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -159,7 +159,7 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
     }
 
     @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult, String criteria) {
+    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
         return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
     }
 

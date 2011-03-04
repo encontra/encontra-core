@@ -1,8 +1,12 @@
 package pt.inevo.encontra.storage;
 
+import pt.inevo.encontra.query.criteria.StorageCriteria;
+
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class SimpleObjectStorage<ID extends Number,O extends IEntity<ID>> extends GenericEntryStorage<ID,O> implements ObjectStorage<ID,O> {
@@ -21,8 +25,13 @@ public class SimpleObjectStorage<ID extends Number,O extends IEntity<ID>> extend
     }
 
     @Override
-    public O get(ID id, String criteria) {
-        return map.get(id);
+    public boolean validate(ID id, StorageCriteria criteria) {
+        return true;
+    }
+
+    @Override
+    public List<ID> getValidIds(StorageCriteria criteria){
+        return new ArrayList<ID>();
     }
 
 

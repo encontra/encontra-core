@@ -14,6 +14,7 @@ import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.engine.QueryProcessor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.IndexingException;
+import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
@@ -41,6 +42,12 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         queryParser = new QueryParserDefaultImpl();
     }
 
+    @Override
+    public void setTopSearcher(AbstractSearcher topSearcher) {
+        super.setTopSearcher(topSearcher);
+        combiner.setStorage(topSearcher.getObjectStorage());
+    }
+
     /**
      * Actor for applying boolean operators: AND and OR.
      */
@@ -48,7 +55,6 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
 
         protected int numAnswers, possibleAnswers;
         protected List results;
-        protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected QueryParserNode node;
@@ -58,7 +64,6 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         protected int resultPartsCount = 0, previousPartsCount = 0;
 
         public BooleanSearcherActor() {
-            combiner = new ResultSetOperations();
             results = new ArrayList<ResultSetDefaultImpl>();
             runningActors = new HashMap<ActorRef, QueryParserNode>();
         }
@@ -123,28 +128,35 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                     ResultSet combinedResultSet;
 
                     if (node.predicateType.equals(And.class)) {
-                        combinedResultSet = combiner.intersect(results, originalLimit);
+                        combinedResultSet = combiner.intersect(results, originalLimit, node.criteria);
                     } else {
-                        combinedResultSet = combiner.join(results, node.distinct, originalLimit);
+                        combinedResultSet = combiner.join(results, node.distinct, originalLimit, node.criteria);
                     }
-                    results.clear();
 
-                    if ((previousResultsCount <= combinedResultSet.getSize() || resultPartsCount > previousPartsCount) && combinedResultSet.getSize() < originalLimit) {
-                        for (ActorRef actor : runningActors.keySet()) {
-                            QueryParserNode n = runningActors.get(actor);
-                            n.limit *= 2;
-                            actor.sendOneWay(n, getContext());
-                        }
-
-                        previousResultsCount = combinedResultSet.getSize();
-                        previousPartsCount = resultPartsCount;
+                    if (originalActor != null) {
+                        originalActor.sendOneWay(combinedResultSet);
                     } else {
-                        if (originalActor != null) {
-                            originalActor.sendOneWay(combinedResultSet);
-                        } else {
-                            future.completeWithResult(combinedResultSet);
-                        }
+                        future.completeWithResult(combinedResultSet);
                     }
+
+//                    results.clear();
+//
+//                    if ((previousResultsCount <= combinedResultSet.getSize() || resultPartsCount > previousPartsCount) && combinedResultSet.getSize() < originalLimit) {
+//                        for (ActorRef actor : runningActors.keySet()) {
+//                            QueryParserNode n = runningActors.get(actor);
+//                            n.limit *= 2;
+//                            actor.sendOneWay(n, getContext());
+//                        }
+//
+//                        previousResultsCount = combinedResultSet.getSize();
+//                        previousPartsCount = resultPartsCount;
+//                    } else {
+//                        if (originalActor != null) {
+//                            originalActor.sendOneWay(combinedResultSet);
+//                        } else {
+//                            future.completeWithResult(combinedResultSet);
+//                        }
+//                    }
                 }
             }
         }
@@ -155,13 +167,11 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         protected int numAnswers, possibleAnswers;
         protected List partResults;
         protected ResultSet results;
-        protected ResultSetOperations combiner;
         protected ActorRef originalActor;
         protected CompletableFuture future;
         protected QueryParserNode node;
 
         public SimilarEqualParallelSearcherActor() {
-            combiner = new ResultSetOperations();
             partResults = new ArrayList<ResultSetDefaultImpl>();
         }
 
@@ -172,7 +182,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
             try {
                 Constructor c = node.predicateType.getConstructor(Expression.class, Object.class);
                 CriteriaQuery newQuery = q.where((Expression) c.newInstance(path, obj));
-                newQuery = ((CriteriaQueryImpl) newQuery).distinct(node.distinct);
+                newQuery = newQuery.distinct(node.distinct);
                 return newQuery;
             } catch (Exception ex) {
                 System.out.println("[Error]: Could not execute the query! Possible reason: " + ex.getMessage());
@@ -277,11 +287,15 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
 
                 if (numAnswers >= possibleAnswers) {
 
-                    results = combiner.intersect(partResults, node.limit);
-
                     if (originalActor != null) {
+                        if (partResults.size() > 1){
+                            results = combiner.intersect(partResults, node.limit, node.criteria);
+                        } else {
+                            results = (ResultSet)partResults.get(0);
+                        }
                         originalActor.sendOneWay(results);
                     } else {
+                        results = combiner.intersect(partResults, node.limit, node.criteria);
                         future.completeWithResult(results);
                     }
                 }

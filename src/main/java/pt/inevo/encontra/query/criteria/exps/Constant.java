@@ -5,7 +5,6 @@ import pt.inevo.encontra.query.ExpressionImpl;
 import pt.inevo.encontra.query.criteria.ExpressionVisitor;
 import pt.inevo.encontra.query.Expressions;
 
-
 public class Constant<X> extends ExpressionImpl<X> {
     public final Object arg;
     public Constant(Class<X> t, X x) {
