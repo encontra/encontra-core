@@ -49,7 +49,7 @@ public class SimpleCriteriaQuerySimilarityTest extends TestCase {
         //Creating the engine and setting its properties
         engine = new SimpleEngine<IndexedObject>();
         engine.setObjectStorage(storage);
-        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+        engine.setQueryProcessor(new QueryProcessorDefaultImpl(IndexedObject.class));
         engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 

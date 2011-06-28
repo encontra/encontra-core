@@ -232,8 +232,8 @@ public class CriteriaQueryNotTest extends TestCase {
         //NotEqual(titleMode,"aaa") AND NotEqual(contentMode, "bba")
         CriteriaQuery query = cb.createQuery().where(
                 cb.not(cb.or(
-                cb.equal(titleModel, "aaa"),
-                cb.equal(contentModel, "bba")))).limit(8);
+                    cb.equal(titleModel, "aaa"),
+                    cb.equal(contentModel, "bba")))).limit(8);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

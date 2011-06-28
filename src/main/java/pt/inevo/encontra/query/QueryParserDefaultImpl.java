@@ -1,11 +1,11 @@
 package pt.inevo.encontra.query;
 
+import pt.inevo.encontra.query.criteria.*;
+import pt.inevo.encontra.query.criteria.exps.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-
-import pt.inevo.encontra.query.criteria.*;
-import pt.inevo.encontra.query.criteria.exps.*;
 
 /**
  * Default implementation of an internal parser for the CriteriaQuery.
@@ -70,6 +70,13 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
             constantNode.fieldObject = t.arg;
             currentTopNode.fieldObject = t.arg;
             currentTopNode.childrenNodes.add(constantNode);
+
+            //TO DO - remove this code here, because this is a workaround
+            if (currentTopNode.field == null && (currentTopNode.predicate instanceof Similar)) {
+                if (constantNode.fieldObject instanceof String) {
+                    currentTopNode.field = (String)constantNode.fieldObject;
+                }
+            }
         } else if (expr instanceof Path) {
             //creating the Path node
             Path p = (Path) expr;
@@ -85,6 +92,12 @@ public class QueryParserDefaultImpl extends ExpressionVisitor.AbstractVisitor im
             processSimilarEquals(expr);
         } else if (expr instanceof NotEqual) {
             processSimilarEquals(expr);
+//            Predicate.BooleanOperator o = ((NotEqual) expr).getOperator();
+//            if (o.name().equals("AND") || o.name().equals("OR")) {
+//                processBooleanOperator(expr);
+//            } else {
+//                processSimilarEquals(expr);
+//            }
         } else if (expr instanceof Not) {
             negated = true;
             negatedParentNode = null;

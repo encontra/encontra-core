@@ -8,15 +8,23 @@ import pt.inevo.encontra.storage.IEntity;
 
 public abstract class AbstractQueryProcessor<E extends IEntity> extends IQueryProcessor<E> {
 
+    public AbstractQueryProcessor(){
+        super();
+    }
+
+    public AbstractQueryProcessor(Class clazz) {
+        super(clazz);
+    }
+
     @Override
     public ResultSet<E> process(QueryParserNode node) {
-        if (node.predicate instanceof And) {
+        if (node.predicateType.equals(And.class)) {
             return processAND(node);
-        } else if (node.predicate instanceof Or) {
+        } else if (node.predicateType.equals(Or.class)) {
             return processOR(node);
-        } else if (node.predicate instanceof Similar
-                || node.predicate instanceof Equal
-                || node.predicate instanceof NotEqual) {
+        } else if (node.predicateType.equals(Similar.class)
+                || node.predicateType.equals(Equal.class)
+                || node.predicateType.equals(NotEqual.class)) {
             return processSIMILAR(node);
         } else {
             return new ResultSetDefaultImpl<E>();
