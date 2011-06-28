@@ -56,7 +56,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends AbstractQueryP
      */
     @Override
     protected ResultSet processAND(QueryParserNode node) {
-        ResultSet<E> results;
+        ResultSet<E> results = null;
 
         List resultsParts = new ArrayList<ResultSetDefaultImpl<E>>();
         List<QueryParserNode> nodes = node.childrenNodes;
@@ -92,13 +92,17 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends AbstractQueryP
     }
 
     @Override
-    protected ResultSet processSIMILAR(QueryParserNode node) {
+    protected ResultSet processSIMILAR(QueryParserNode node, boolean top) {
         ResultSet<E> results;
 
         if (node.field != null) {
             results = processSIMILARSimple(node);
         } else {
             results = processSIMILARCompound(node);
+        }
+
+        if (top){
+            results = results.getFirstResults(node.limit);
         }
 
         return results;
@@ -244,6 +248,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends AbstractQueryP
     /**
      * Creates a sub-query for Equal, Similar, and NotEqual, given a node.
      * This query is created with the Object constructor (Object, Object).
+     *
      * @param node the node to be used in the expression
      * @return the new query to be used
      */

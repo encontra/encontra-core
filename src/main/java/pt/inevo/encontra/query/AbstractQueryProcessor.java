@@ -25,7 +25,7 @@ public abstract class AbstractQueryProcessor<E extends IEntity> extends IQueryPr
         } else if (node.predicateType.equals(Similar.class)
                 || node.predicateType.equals(Equal.class)
                 || node.predicateType.equals(NotEqual.class)) {
-            return processSIMILAR(node);
+            return processSIMILAR(node, true);
         } else {
             return new ResultSetDefaultImpl<E>();
         }

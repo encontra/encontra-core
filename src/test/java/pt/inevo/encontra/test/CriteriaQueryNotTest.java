@@ -1,24 +1,24 @@
 package pt.inevo.encontra.test;
 
-import pt.inevo.encontra.common.DefaultResultProvider;
-import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.test.entities.ExampleDescriptor;
-import pt.inevo.encontra.test.entities.MetaTestModel;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.DefaultResultProvider;
+import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.index.*;
+import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.SimpleSearcher;
-import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
-//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.storage.*;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
+import pt.inevo.encontra.storage.EntityStorage;
+import pt.inevo.encontra.storage.SimpleObjectStorage;
+import pt.inevo.encontra.test.entities.ExampleDescriptor;
+import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**
  * Testing the Equal expression, alone and combining it with AND and OR predicates.
