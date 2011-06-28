@@ -12,6 +12,7 @@ public class MetaTestModel implements IEntity<Long> {
     private Long id;
     private String title;
     private String content;
+    private String description;
 
     public MetaTestModel(String title, String content) {
         this.title = title;
@@ -53,5 +54,14 @@ public class MetaTestModel implements IEntity<Long> {
                 + ", title='" + title + '\''
                 + ", content='" + content + '\''
                 + '}';
+    }
+
+    @Indexed
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }
