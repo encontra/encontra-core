@@ -16,8 +16,8 @@ import pt.inevo.encontra.query.criteria.exps.NotEqual;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
+import java.util.Collection;
 
-import javax.persistence.criteria.Expression;
 
 /**
  * Simple searcher
@@ -42,6 +42,15 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     public boolean insert(O entry) {
         assert (entry != null);
         Descriptor descriptor = extractor.extract(entry);
+        if(descriptor instanceof Collection){  // Handle MuliDescriptors!
+            boolean res=true;
+            Collection<Descriptor> descriptors=(Collection<Descriptor>) descriptor;
+            for(Descriptor d : descriptors){
+                res = res && index.insert(d);
+            }
+            return res;
+        }
+
         return index.insert(descriptor);
     }
 
