@@ -1,37 +1,31 @@
 package pt.inevo.encontra.query;
 
-import akka.actor.UntypedActorFactory;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
 import akka.dispatch.CompletableFuture;
 import akka.dispatch.Future;
-
-import java.lang.reflect.Constructor;
-import java.util.*;
-
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
-import pt.inevo.encontra.engine.QueryProcessor;
 import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.index.IndexingException;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.Searcher;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
-import pt.inevo.encontra.query.criteria.CriteriaQueryImpl;
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.query.criteria.exps.And;
-import pt.inevo.encontra.query.criteria.exps.Equal;
-import pt.inevo.encontra.query.criteria.exps.NotEqual;
-import pt.inevo.encontra.query.criteria.exps.Or;
-import pt.inevo.encontra.query.criteria.exps.Similar;
+import pt.inevo.encontra.query.criteria.exps.*;
 import pt.inevo.encontra.storage.IEntity;
 import scala.Option;
 
+import java.lang.reflect.Constructor;
+import java.util.*;
+
 /**
  * Default parallel implementation for the query processor.
+ *
  * @author Ricardo
  */
-public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryProcessor<E> {
+public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryProcessorDefaultImpl<E> {
 
     protected Class resultClass;
     protected ResultSetOperations combiner;
@@ -176,7 +170,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         }
 
         //Creates a sub-query for Equal, Similar and NoEqual, given a node
-        private Query createSubQuery(QueryParserNode node, Path path, Object obj) {
+        private Query createExpressionSubQuery(QueryParserNode node, Path path, Object obj) {
             CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
             CriteriaQuery q = cb.createQuery(resultClass);
             try {
@@ -237,13 +231,13 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                         newQueryPath = newQueryPath.get(node.field);
 
                         Searcher searcher = searcherMap.get(parentField);
-                        ResultSet resultSet = searcher.search(createSubQuery(node, newQueryPath, node.fieldObject));
+                        ResultSet resultSet = searcher.search(createExpressionSubQuery(node, newQueryPath, node.fieldObject));
 
                         getContext().sendOneWay(resultSet, getContext());
 
                     } else {
                         Searcher searcher = searcherMap.get(node.field);
-                        ResultSet resultSet = searcher.search(createSubQuery(node, parentPath, node.fieldObject));
+                        ResultSet resultSet = searcher.search(createExpressionSubQuery(node, parentPath, node.fieldObject));
 
                         getContext().sendOneWay(resultSet, getContext());
                     }
@@ -271,7 +265,7 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                                 subModelPath = subModelPath.get(fieldName);
                             }
 
-                            getContext().sendOneWay(createSubQuery(node, subModelPath, obj.getValue()), getContext());
+                            getContext().sendOneWay(createExpressionSubQuery(node, subModelPath, obj.getValue()), getContext());
                         }
 
                     } catch (IndexingException e) {
@@ -288,10 +282,10 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                 if (numAnswers >= possibleAnswers) {
 
                     if (originalActor != null) {
-                        if (partResults.size() > 1){
+                        if (partResults.size() > 1) {
                             results = combiner.intersect(partResults, node.limit, node.criteria);
                         } else {
-                            results = (ResultSet)partResults.get(0);
+                            results = (ResultSet) partResults.get(0);
                         }
                         originalActor.sendOneWay(results);
                     } else {
@@ -304,34 +298,46 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
     }
 
     @Override
-    public ResultSet process(QueryParserNode node) {
+    protected ResultSet processAND(QueryParserNode node) {
+        ActorRef actor = UntypedActor.actorOf(new UntypedActorFactory() {
+            @Override
+            public UntypedActor create() {
+                return new BooleanSearcherActor();
+            }
+        }).start();
 
-        ActorRef runningActor = null;
-        if (node.predicateType.equals(And.class)
-                || node.predicateType.equals(Or.class)) {
-            runningActor = UntypedActor.actorOf(new UntypedActorFactory() {
+        return executeQuery(actor, node);
+    }
 
-                @Override
-                public UntypedActor create() {
-                    return new BooleanSearcherActor();
-                }
-            }).start();
-        } else if (node.predicateType.equals(Similar.class)
-                || node.predicateType.equals(Equal.class)
-                || node.predicateType.equals(NotEqual.class)) {
-            runningActor = UntypedActor.actorOf(new UntypedActorFactory() {
+    @Override
+    protected ResultSet processOR(QueryParserNode node) {
+        return processAND(node);
+    }
+
+    @Override
+    protected ResultSet processSIMILAR(QueryParserNode node) {
+        ActorRef actor = UntypedActor.actorOf(new UntypedActorFactory() {
 
                 @Override
                 public UntypedActor create() {
                     return new SimilarEqualParallelSearcherActor();
                 }
             }).start();
-        }
 
+        return executeQuery(actor, node);
+    }
+
+    /**
+     * Launches the Actor and executes the query, using the QueryParserNode
+     * @param actor the actor to start executing
+     * @param node the node to be processed
+     * @return
+     */
+    protected ResultSet executeQuery(ActorRef actor, QueryParserNode node) {
         long begin = Calendar.getInstance().getTimeInMillis();
 
         //waiting for the processor to output results
-        Future future = runningActor.sendRequestReplyFuture(node, Long.MAX_VALUE, null);
+        Future future = actor.sendRequestReplyFuture(node, Long.MAX_VALUE, null);
         future.await();
 
         long end = Calendar.getInstance().getTimeInMillis();
