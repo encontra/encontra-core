@@ -36,4 +36,9 @@ public class SimpleDescriptor implements Descriptor{
     public double getDistance(Descriptor other) {
        return 0;
     }
+
+    @Override
+    public double getNorm() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    }
 }
