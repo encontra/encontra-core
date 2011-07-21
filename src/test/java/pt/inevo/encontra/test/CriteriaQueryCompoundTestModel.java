@@ -1,30 +1,36 @@
 package pt.inevo.encontra.test;
 
-import pt.inevo.encontra.common.DefaultResultProvider;
-import pt.inevo.encontra.common.Result;
-import java.util.List;
-
-import pt.inevo.encontra.test.entities.CompoundMetaTestModel;
-import pt.inevo.encontra.test.entities.MetaTestModel;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.DefaultResultProvider;
+import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.index.*;
+import pt.inevo.encontra.index.IndexedObject;
+import pt.inevo.encontra.index.IndexingException;
+import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
-import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
-import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.Query;
-//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.storage.*;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
+import pt.inevo.encontra.query.criteria.Expression;
+import pt.inevo.encontra.storage.EntityStorage;
+import pt.inevo.encontra.storage.IEntity;
+import pt.inevo.encontra.storage.IEntry;
+import pt.inevo.encontra.storage.SimpleObjectStorage;
+import pt.inevo.encontra.test.entities.CompoundMetaTestModel;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
+import pt.inevo.encontra.test.entities.MetaTestModel;
+
+import java.util.List;
+
+//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 
 /**
  * Smoke test: testing the creation of an engine and the search for similar
@@ -262,7 +268,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         Expression<Boolean> equalClause = cb.equal(metaModelTitlePath, "bab");
 
         //Create the Query;
-        CriteriaQuery query = cb.createQuery().where(equalClause);
+        CriteriaQuery query = cb.createQuery().where(equalClause).limit(10);
 
         //Searching in the engine for the results
         ResultSet<CompoundMetaTestModel> results = engine.search(query);

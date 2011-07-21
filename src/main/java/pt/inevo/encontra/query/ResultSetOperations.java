@@ -8,10 +8,8 @@ import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.IEntity;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeSet;
 
 /**
  * Implementation of Boolean Operations with ResultSets.
@@ -96,7 +94,7 @@ public class ResultSetOperations<E extends IEntity> {
      * @param results the list where to apply the OR operation
      * @return
      */
-    public ResultSet<E> join(List<ResultSetDefaultImpl<E>> results, boolean distinct, int limit, StorageCriteria criteria) {
+    public ResultSet<E> join(List<ResultSet<E>> results, boolean distinct, int limit, StorageCriteria criteria) {
 
         //final resultset
         ResultSet combinedResultSet = new ResultSetDefaultImpl();
