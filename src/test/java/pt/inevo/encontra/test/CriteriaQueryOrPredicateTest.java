@@ -22,9 +22,9 @@ import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.storage.*;
 
 /**
- * Testing the OR predicate.
- * @author ricardo
- */
+* Testing the OR predicate.
+* @author ricardo
+*/
 public class CriteriaQueryOrPredicateTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
@@ -49,7 +49,7 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
 //        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
-        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers
@@ -66,8 +66,8 @@ public class CriteriaQueryOrPredicateTest extends TestCase {
         contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
-        engine.getQueryProcessor().setSearcher("title", titleSearcher);
-        engine.getQueryProcessor().setSearcher("content", contentSearcher);
+        engine.setSearcher("title", titleSearcher);
+        engine.setSearcher("content", contentSearcher);
 
         //Inserting some elements into the engine (indexes)
         engine.insert(new MetaTestModel("aaa", "bbb"));

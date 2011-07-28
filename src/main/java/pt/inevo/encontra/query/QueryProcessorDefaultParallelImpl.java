@@ -9,6 +9,7 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.query.criteria.exps.*;
+import pt.inevo.encontra.query.operatorprocessors.SimilarOperatorProcessor;
 import pt.inevo.encontra.storage.IEntity;
 import scala.Option;
 
@@ -17,10 +18,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Default parallel implementation for the query processor.
- *
- * @author Ricardo
- */
+* Default parallel implementation for the query processor.
+*
+* @author Ricardo
+*/
 public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryProcessorDefaultImpl<E> {
 
     protected Class resultClass;
@@ -162,10 +163,10 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
                  * Processes the query and retrieves the results
                  */
                 if (node.field != null) {
-                    results = processSIMILARSimple(node);
+                    results = new SimilarOperatorProcessor().process(node);
                     getContext().sendOneWay(results, getContext());
                 } else {
-                    results = processSIMILARCompound(node);
+                    results = new SimilarOperatorProcessor().process(node);
                     getContext().sendOneWay(results, getContext());
                 }
 
@@ -199,7 +200,6 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         }
     }
 
-    @Override
     protected ResultSet processAND(QueryParserNode node) {
         ActorRef actor = UntypedActor.actorOf(new UntypedActorFactory() {
             @Override
@@ -211,12 +211,10 @@ public class QueryProcessorDefaultParallelImpl<E extends IEntity> extends QueryP
         return executeQuery(actor, node);
     }
 
-    @Override
     protected ResultSet processOR(QueryParserNode node) {
         return processAND(node);
     }
 
-    @Override
     protected ResultSet processSIMILAR(QueryParserNode node, boolean top) {
         ActorRef actor = UntypedActor.actorOf(new UntypedActorFactory() {
 

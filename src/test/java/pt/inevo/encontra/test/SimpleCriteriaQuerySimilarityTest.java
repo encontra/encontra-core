@@ -23,10 +23,10 @@ import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**
- * Smoke test: testing the creation of an engine and the search for similar
- * objects in it.
- * @author ricardo
- */
+* Smoke test: testing the creation of an engine and the search for similar
+* objects in it.
+* @author ricardo
+*/
 public class SimpleCriteriaQuerySimilarityTest extends TestCase {
 
     private SimpleEngine<IndexedObject> engine;
@@ -50,7 +50,7 @@ public class SimpleCriteriaQuerySimilarityTest extends TestCase {
         engine = new SimpleEngine<IndexedObject>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl(IndexedObject.class));
-        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 
         //A searcher for the "title"
@@ -66,8 +66,8 @@ public class SimpleCriteriaQuerySimilarityTest extends TestCase {
         descriptionSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
-        engine.getQueryProcessor().setSearcher("title", titleSearcher);
-        engine.getQueryProcessor().setSearcher("description", descriptionSearcher);
+        engine.setSearcher("title", titleSearcher);
+        engine.setSearcher("description", descriptionSearcher);
 
         //Inserting some elements into the engine (indexes)
         engine.insert(new IndexedObject(null, "title", "aaa", 0));

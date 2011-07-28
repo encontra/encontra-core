@@ -1,34 +1,34 @@
 package pt.inevo.encontra.test;
 
-import pt.inevo.encontra.common.DefaultResultProvider;
-import pt.inevo.encontra.common.Result;
-import pt.inevo.encontra.index.search.ParallelSimpleSearcher;
-import pt.inevo.encontra.test.entities.MetaTestModel;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import junit.framework.TestCase;
 import org.junit.Test;
+import pt.inevo.encontra.common.DefaultResultProvider;
+import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
+import pt.inevo.encontra.descriptors.Descriptor;
+import pt.inevo.encontra.descriptors.DescriptorExtractor;
+import pt.inevo.encontra.descriptors.MultiDescriptorExtractor;
+import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
-import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.index.*;
+import pt.inevo.encontra.index.IndexedObject;
+import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.SimpleSearcher;
-import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.CriteriaQuery;
-import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.query.Path;
-//import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
-import pt.inevo.encontra.storage.*;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
+import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
+import pt.inevo.encontra.test.entities.MetaTestModel;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 /**
- * Smoke test: testing the creation of an engine and the search for similar
- * objects in it.
- * @author ricardo
- */
+* Smoke test: testing the creation of an engine and the search for similar
+* objects in it.
+* @author ricardo
+*/
 public class SmokeTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
@@ -38,6 +38,26 @@ public class SmokeTest extends TestCase {
         super(testName);
     }
 
+
+    class SimpleMultiDescriptorExtractor extends MultiDescriptorExtractor<IndexedObject, Descriptor> {
+
+        private DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
+
+        SimpleMultiDescriptorExtractor() {
+            super();
+        }
+
+        @Override
+        protected List<Descriptor> extractDescriptors(IndexedObject object) {
+
+            Descriptor d = descriptorExtractor.extract(object);
+            List<Descriptor> descs = new ArrayList<Descriptor>();
+            descs.add(d);
+            descs.add(d);
+            return descs;
+        }
+    }
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -45,34 +65,25 @@ public class SmokeTest extends TestCase {
         //Creating a simple descriptor
         DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
 
-        //Creating the storage
-        EntityStorage storage = new SimpleObjectStorage(MetaTestModel.class);
-
         //Creating the engine and setting its properties
         engine = new SimpleEngine<MetaTestModel>();
-        engine.setObjectStorage(storage);
-        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
-        engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers
         //A searcher for the "title"
-//        SimpleSearcher titleSearcher = new SimpleSearcher();
-        ParallelSimpleSearcher titleSearcher = new ParallelSimpleSearcher();
+        SimpleSearcher titleSearcher = new SimpleSearcher();
         titleSearcher.setDescriptorExtractor(descriptorExtractor);
         titleSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
         titleSearcher.setResultProvider(new DefaultResultProvider());
 
         //A searcher for the "content"
-//        SimpleSearcher contentSearcher = new SimpleSearcher();
-        ParallelSimpleSearcher contentSearcher = new ParallelSimpleSearcher();
+        SimpleSearcher contentSearcher = new SimpleSearcher();
         contentSearcher.setDescriptorExtractor(descriptorExtractor);
         contentSearcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
         contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
-        engine.getQueryProcessor().setSearcher("title", titleSearcher);
-        engine.getQueryProcessor().setSearcher("content", contentSearcher);
+        engine.setSearcher("title", titleSearcher);
+        engine.setSearcher("content", contentSearcher);
 
         //Inserting some elements into the engine (indexes)
         for (int i = 0; i < 10000 ; i++)
@@ -95,7 +106,7 @@ public class SmokeTest extends TestCase {
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
 
         // TODO must remove this setID call to object
-        MetaTestModel testObject = new MetaTestModel("ghaksdfd", "aaaa");
+        MetaTestModel testObject = new MetaTestModel("11", "111");
         testObject.setId(Long.MIN_VALUE);
 
         Expression<Boolean> similar = cb.similar(model, testObject);
@@ -118,8 +129,8 @@ public class SmokeTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
-        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "211");
+        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "101");
 
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(
@@ -142,8 +153,8 @@ public class SmokeTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
-        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
-        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "101");
+        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "11");
 
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(

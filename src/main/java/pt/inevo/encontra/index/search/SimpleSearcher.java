@@ -1,22 +1,20 @@
 package pt.inevo.encontra.index.search;
 
-import pt.inevo.encontra.descriptors.Descriptor;
-import pt.inevo.encontra.descriptors.DescriptorExtractor;
-import pt.inevo.encontra.index.EntryProvider;
-import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
-import pt.inevo.encontra.query.QueryParserNode;
-import pt.inevo.encontra.query.Query;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.descriptors.Descriptor;
+import pt.inevo.encontra.index.EntryProvider;
+import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.Query;
+import pt.inevo.encontra.query.QueryParserNode;
+import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.query.criteria.exps.Equal;
 import pt.inevo.encontra.query.criteria.exps.NotEqual;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
-import java.util.Collection;
 
 
 /**
@@ -24,41 +22,8 @@ import java.util.Collection;
  */
 public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
-    protected DescriptorExtractor extractor;
-
     public SimpleSearcher() {
         queryProcessor = new QueryProcessorDefaultImpl();
-    }
-
-    public void setDescriptorExtractor(DescriptorExtractor extractor) {
-        this.extractor = extractor;
-    }
-
-    public DescriptorExtractor getDescriptorExtractor() {
-        return extractor;
-    }
-
-    @Override
-    public boolean insert(O entry) {
-        assert (entry != null);
-        Descriptor descriptor = extractor.extract(entry);
-        if(descriptor instanceof Collection){  // Handle MuliDescriptors!
-            boolean res=true;
-            Collection<Descriptor> descriptors=(Collection<Descriptor>) descriptor;
-            for(Descriptor d : descriptors){
-                res = res && index.insert(d);
-            }
-            return res;
-        }
-
-        return index.insert(descriptor);
-    }
-
-    @Override
-    public boolean remove(O entry) {
-        assert (entry != null);
-        Descriptor descriptor = extractor.extract(entry);
-        return index.remove(descriptor);
     }
 
     @Override
@@ -79,11 +44,21 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
                 Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
                 results = performEqualQuery(d, false);
             } else {
-                return getResultObjects(queryProcessor.search(query));
+                results = queryProcessor.search(query);
             }
         }
 
         return getResultObjects(results);
+    }
+
+    @Override
+    public ResultSet<O> similar(O entity, int knn) {
+        ResultSet<IEntry> results = new ResultSetDefaultImpl<IEntry>();
+        if (entity instanceof IndexedObject) {
+            Descriptor d = getDescriptorExtractor().extract(entity);
+            results = performKnnQuery(d, index.getEntryProvider().size());
+        }
+        return getResultObjects(results).getFirstResults(knn);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
@@ -93,7 +68,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
 
-        for (; provider.hasNext();) {
+        for (; provider.hasNext(); ) {
             Descriptor o = provider.getNext();
 
             double distance = d.getDistance(o);
@@ -115,7 +90,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
 
-        for (; provider.hasNext();) {
+        for (; provider.hasNext(); ) {
             Descriptor o = provider.getNext();
 
             double distance = d.getDistance(o);

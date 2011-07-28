@@ -22,10 +22,10 @@ import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**
- * Smoke test: testing the creation of an engine and the search for similar
- * objects in it.
- * @author ricardo
- */
+* Smoke test: testing the creation of an engine and the search for similar
+* objects in it.
+* @author ricardo
+*/
 public class CriteriaQueryParallelTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
@@ -51,7 +51,7 @@ public class CriteriaQueryParallelTest extends TestCase {
 //        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
         engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
 //        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
-        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers
@@ -68,8 +68,8 @@ public class CriteriaQueryParallelTest extends TestCase {
         contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
-        engine.getQueryProcessor().setSearcher("title", titleSearcher);
-        engine.getQueryProcessor().setSearcher("content", contentSearcher);
+        engine.setSearcher("title", titleSearcher);
+        engine.setSearcher("content", contentSearcher);
 
         //Inserting some elements into the engine (indexes)
         engine.insert(new MetaTestModel("aaa", "bbb"));

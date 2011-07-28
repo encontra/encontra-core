@@ -21,9 +21,9 @@ import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**
- * Testing the Equal expression, alone and combining it with AND and OR predicates.
- * @author ricardo
- */
+* Testing the Equal expression, alone and combining it with AND and OR predicates.
+* @author ricardo
+*/
 public class CriteriaQueryNotTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
@@ -46,7 +46,7 @@ public class CriteriaQueryNotTest extends TestCase {
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers
@@ -63,8 +63,8 @@ public class CriteriaQueryNotTest extends TestCase {
         contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
-        engine.getQueryProcessor().setSearcher("title", titleSearcher);
-        engine.getQueryProcessor().setSearcher("content", contentSearcher);
+        engine.setSearcher("title", titleSearcher);
+        engine.setSearcher("content", contentSearcher);
 
         //Inserting some elements into the engine (indexes)
         engine.insert(new MetaTestModel("aaa", "bbb"));

@@ -9,100 +9,92 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptorExtractor;
 import pt.inevo.encontra.engine.SimpleEngine;
 import pt.inevo.encontra.engine.SimpleIndexedObjectFactory;
-import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.index.IndexingException;
 import pt.inevo.encontra.index.SimpleIndex;
-import pt.inevo.encontra.index.search.AbstractSearcher;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
-import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.storage.EntityStorage;
-import pt.inevo.encontra.storage.IEntity;
-import pt.inevo.encontra.storage.IEntry;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 import pt.inevo.encontra.test.entities.CompoundMetaTestModel;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
-import java.util.List;
-
 //import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 
 /**
- * Smoke test: testing the creation of an engine and the search for similar
- * objects in it.
- * @author ricardo
- */
+* Smoke test: testing the creation of an engine and the search for similar
+* objects in it.
+* @author ricardo
+*/
 public class CriteriaQueryCompoundTestModel extends TestCase {
 
     private SimpleEngine<CompoundMetaTestModel> engine;
     private CriteriaBuilderImpl cb;
 
     //MetaTestModelQueryProcessor - for testing purposes
-    class MetaTestModelQueryProcessor<E extends IEntity> extends QueryProcessorDefaultImpl<E> {
+//    class MetaTestModelQueryProcessor<E extends IEntity> extends QueryProcessorDefaultImpl<E> {
+//
+//        @Override
+//        public boolean insert(E object) {
+//            if (object instanceof IndexedObject) {
+//                IndexedObject obj = (IndexedObject) object;
+//
+//                //is it a compound object
+//                if (obj.getValue() instanceof IEntity) {
+//                    //first set the ID
+//                    IEntity entity = (IEntity) obj.getValue();
+//                    entity.setId(obj.getId());
+//                    processBean(entity);
+//
+//                } else {    //its not a compound object
+//                    insertObject(object);
+//                }
+//
+//            } else {
+//                processBean(object);
+//            }
+//
+//            return true;
+//        }
+//
+//        private void processBean(IEntity entity) {
+//            try {
+//                List<IndexedObject> indexedObjects = indexedObjectFactory.processBean(entity);
+//                for (IndexedObject obj : indexedObjects) {
+//                    insertObject((E) obj);
+//                }
+//            } catch (IndexingException e) {
+//                System.out.println("[Error] Exception: " + e.getMessage());
+//            }
+//        }
+//    }
 
-        @Override
-        public boolean insert(E object) {
-            if (object instanceof IndexedObject) {
-                IndexedObject obj = (IndexedObject) object;
-
-                //is it a compound object
-                if (obj.getValue() instanceof IEntity) {
-                    //first set the ID
-                    IEntity entity = (IEntity) obj.getValue();
-                    entity.setId(obj.getId());
-                    processBean(entity);
-
-                } else {    //its not a compound object
-                    insertObject(object);
-                }
-
-            } else {
-                processBean(object);
-            }
-
-            return true;
-        }
-
-        private void processBean(IEntity entity) {
-            try {
-                List<IndexedObject> indexedObjects = indexedObjectFactory.processBean(entity);
-                for (IndexedObject obj : indexedObjects) {
-                    insertObject((E) obj);
-                }
-            } catch (IndexingException e) {
-                System.out.println("[Error] Exception: " + e.getMessage());
-            }
-        }
-    }
-
-    //MetaTestModelSearcher - for testing purposes
-    class MetaTestModelSearcher<O extends IEntity> extends AbstractSearcher<O> {
-
-        @Override
-        public boolean insert(O object) {
-            return queryProcessor.insert(object);
-        }
-
-        @Override
-        public boolean remove(O object) {
-            return queryProcessor.remove(object);
-        }
-
-        @Override
-        public ResultSet search(Query query) {
-            return queryProcessor.search(query);
-        }
-
-        @Override
-        protected Result getResultObject(Result<IEntry> entryResult) {
-            return new Result<O>((O) storage.get(entryResult.getResultObject().getId()));
-        }
-    }
+//    //MetaTestModelSearcher - for testing purposes
+//    class MetaTestModelSearcher<O extends IEntity> extends AbstractSearcher<O> {
+//
+//        @Override
+//        public boolean insert(O object) {
+//            return queryProcessor.insert(object);
+//        }
+//
+//        @Override
+//        public boolean remove(O object) {
+//            return queryProcessor.remove(object);
+//        }
+//
+//        @Override
+//        public ResultSet search(Query query) {
+//            return queryProcessor.search(query);
+//        }
+//
+//        @Override
+//        protected Result getResultObject(Result<IEntry> entryResult) {
+//            return new Result<O>((O) storage.get(entryResult.getResultObject().getId()));
+//        }
+//    }
 
     public CriteriaQueryCompoundTestModel(String testName) {
         super(testName);
@@ -121,7 +113,7 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         engine = new SimpleEngine<CompoundMetaTestModel>();
         engine.setObjectStorage(storage);
         engine.setQueryProcessor(new QueryProcessorDefaultImpl());
-        engine.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        engine.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 
         //Creating the searchers - searchers for native fields (not complex here)
@@ -130,10 +122,10 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         nameSeacher.setIndex(new SimpleIndex(ExampleDescriptor.class));
         nameSeacher.setResultProvider(new DefaultResultProvider());
 
-        MetaTestModelSearcher<MetaTestModel> modelTestSearcher = new MetaTestModelSearcher<MetaTestModel>();
-        modelTestSearcher.setQueryProcessor(new MetaTestModelQueryProcessor());
+        SimpleSearcher<MetaTestModel> modelTestSearcher = new SimpleSearcher<MetaTestModel>();
+        modelTestSearcher.setQueryProcessor(new QueryProcessorDefaultImpl());
         modelTestSearcher.setObjectStorage(storage);
-        modelTestSearcher.getQueryProcessor().setIndexedObjectFactory(new SimpleIndexedObjectFactory());
+        modelTestSearcher.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         modelTestSearcher.setResultProvider(new DefaultResultProvider());
 
         //A performQuery for the "title"
@@ -149,11 +141,11 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
         contentSearcher.setResultProvider(new DefaultResultProvider());
 
         //setting the searchers
-        modelTestSearcher.getQueryProcessor().setSearcher("title", titleSearcher);
-        modelTestSearcher.getQueryProcessor().setSearcher("content", contentSearcher);
+        modelTestSearcher.setSearcher("title", titleSearcher);
+        modelTestSearcher.setSearcher("content", contentSearcher);
 
-        engine.getQueryProcessor().setSearcher("name", nameSeacher);
-        engine.getQueryProcessor().setSearcher("testModel", modelTestSearcher);
+        engine.setSearcher("name", nameSeacher);
+        engine.setSearcher("testModel", modelTestSearcher);
 
         //Inserting some elements into the engine
         engine.insert(new CompoundMetaTestModel("name1", new MetaTestModel("aaa", "bbb")));
