@@ -1,4 +1,4 @@
-package pt.inevo.encontra.test;
+package pt.inevo.encontra.test.query;
 
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -13,29 +13,32 @@ import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.SimpleSearcher;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.QueryProcessorDefaultParallelImpl;
 import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
+import pt.inevo.encontra.query.criteria.Expression;
 import pt.inevo.encontra.storage.EntityStorage;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**
-* Testing the Equal expression, alone and combining it with AND and OR predicates.
+* Smoke test: testing the creation of an engine and the search for similar
+* objects in it.
 * @author ricardo
 */
-public class CriteriaQueryNotTest extends TestCase {
+public class CriteriaQueryParallelTest extends TestCase {
 
     private SimpleEngine<MetaTestModel> engine;
     private CriteriaBuilderImpl cb;
 
-    public CriteriaQueryNotTest(String testName) {
+    public CriteriaQueryParallelTest(String testName) {
         super(testName);
     }
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
         //Creating a simple descriptor
         DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
 
@@ -45,7 +48,9 @@ public class CriteriaQueryNotTest extends TestCase {
         //Creating the engine and setting its properties
         engine = new SimpleEngine<MetaTestModel>();
         engine.setObjectStorage(storage);
-        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+//        engine.setQueryProcessor(new QueryProcessorDefaultImpl());
+        engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
+//        engine.setQueryProcessor(new QueryProcessorSortedParallelImpl());
         engine.setIndexedObjectFactory(new SimpleIndexedObjectFactory());
         engine.setResultProvider(new DefaultResultProvider());
 
@@ -87,69 +92,72 @@ public class CriteriaQueryNotTest extends TestCase {
 
     @Test
     public void test1() {
-
+        System.out.println("Test1");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
+
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path title = model.get("title");
+        Path content = model.get("content");
 
-        //Create the Query
-        MetaTestModel m = new MetaTestModel("aaa", "bbb");
-        m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.not(cb.equal(model, m))).limit(8);
-
-        //Searching in the engine for the results
+        Expression<Boolean> similar = cb.similar(title, "aaa");
+        Expression<Boolean> similarContent = cb.similar(content, "bbb");
+        CriteriaQuery query = cb.createQuery().where(cb.and(similar, similarContent)).distinct(true);
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        //check if it returned one result
-        assertTrue(results.getSize() == 7);
-
+        //Searching in the engine for the results
         printResults(results);
     }
 
     @Test
     public void test2() {
-
+        System.out.println("Test2");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
+        Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
 
-        MetaTestModel m = new MetaTestModel("aaaj", "bbb");
-        m.setId(Long.MIN_VALUE);
-        CriteriaQuery query = cb.createQuery().where(cb.not(cb.similar(model, m))).limit(8);
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
+        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(titleSimilarityClause, contentSimilarityClause)).distinct(true);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        //should return no results
-        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
 
     @Test
     public void test3() {
-
+        System.out.println("Test3");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
+        Path<String> contentModel = model.get("content");
 
-        CriteriaQuery query = criteriaQuery.where(cb.not(cb.equal(titleModel, "aaa"))).limit(8);
+        Expression<Boolean> titleSimilarityClause = cb.similar(titleModel, "ghak");
+        Expression<Boolean> contentSimilarityClause = cb.similar(contentModel, "aaaa");
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(
+                cb.and(titleSimilarityClause, contentSimilarityClause));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        //should return only one result
-        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
 
     @Test
     public void test4() {
-
+        System.out.println("Test4");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
@@ -157,191 +165,84 @@ public class CriteriaQueryNotTest extends TestCase {
         Path<String> titleModel = model.get("title");
         Path<String> contentModel = model.get("content");
 
+        Expression<Boolean> titleEqualClause = cb.equal(titleModel, "aaa");
+        Expression<Boolean> contentEqualClause = cb.equal(contentModel, "bbb");
+
+        //Create the Query
         CriteriaQuery query = cb.createQuery().where(
-                cb.and(
-                    cb.not(cb.equal(titleModel, "aaa")),
-                    cb.equal(contentModel, "bbb"))).distinct(true).limit(8);
+                cb.and(titleEqualClause, contentEqualClause));
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        //only one result because of the and condition
-        assertTrue(results.isEmpty());
 
         printResults(results);
     }
 
     @Test
     public void test5() {
-
+        System.out.println("Test5");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
         Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        CriteriaQuery query = cb.createQuery().where(
-                cb.and(
-                    cb.not(cb.equal(titleModel, "aaa")),
-                    cb.equal(contentModel, "bba"))).limit(8);
+        Expression<Boolean> titleEqualClause = cb.equal(titleModel, "aaa");
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(titleEqualClause);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        //only one result because of the and condition
-        assertTrue(results.getSize() == 1);
 
         printResults(results);
     }
 
     @Test
     public void test6() {
-
+        System.out.println("Test6");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        CriteriaQuery query = cb.createQuery().where(
-                cb.or(
-                    cb.equal(titleModel, "aaa"),
-                    cb.not(cb.equal(contentModel, "bba")))).distinct(true).limit(8);
+        MetaTestModel testObject = new MetaTestModel("aaa", "bbb");
+        testObject.setId(Long.MIN_VALUE);
+
+        Expression<Boolean> clause = cb.similar(model, testObject);
+
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(clause);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
-
-        //should return two results because of the or condition
-        assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
 
     @Test
     public void test7() {
-
+        System.out.println("Test7");
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
 
         //Create the Model/Attributes Path
         Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
 
-        //NotEqual(titleMode,"aaa") AND NotEqual(contentMode, "bba")
-        CriteriaQuery query = cb.createQuery().where(
-                cb.not(cb.or(
-                    cb.equal(titleModel, "aaa"),
-                    cb.equal(contentModel, "bba")))).limit(8);
+        MetaTestModel testObject = new MetaTestModel("aaa", "bbb");
+        testObject.setId(Long.MIN_VALUE);
 
-        //Searching in the engine for the results
-        ResultSet<MetaTestModel> results = engine.search(query);
+        Expression<Boolean> clause = cb.equal(model, testObject);
 
-        //should return two results because of the or condition
-        assertTrue(results.getSize() == 6);
-
-        printResults(results);
-    }
-
-    @Test
-    public void test8() {
-
-        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-
-        //Create the Model/Attributes Path
-        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
-
-        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
-        CriteriaQuery query = cb.createQuery().where(
-                cb.not(cb.and(
-                    cb.equal(titleModel, "aaa"),
-                    cb.equal(contentModel, "bba")))).distinct(true).limit(8);
+        //Create the Query
+        CriteriaQuery query = cb.createQuery().where(clause).distinct(true);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        //should return two results because of the or condition
-        assertTrue(results.getSize() == 8);
-
         printResults(results);
     }
 
-    @Test
-    public void test9() {
-
-        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-
-        //Create the Model/Attributes Path
-        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
-
-        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
-        CriteriaQuery query = cb.createQuery().where(
-                cb.and(
-                    cb.not(cb.equal(titleModel, "aaa")),
-                    cb.not(cb.equal(contentModel, "bba")))).limit(8);
-
-        //Searching in the engine for the results
-        ResultSet<MetaTestModel> results = engine.search(query);
-
-        //should return two results because of the or condition
-        assertTrue(results.getSize() == 6);
-
-        printResults(results);
-    }
-
-    @Test
-    public void test10() {
-
-        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-
-        //Create the Model/Attributes Path
-        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-        Path<String> contentModel = model.get("content");
-
-        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
-        CriteriaQuery query = cb.createQuery().where(
-                cb.and(
-                    cb.not(cb.equal(titleModel, "aaa")),
-                    cb.or(
-                        cb.equal(contentModel, "bba"))),
-                        cb.similar(titleModel, "absga")).limit(8);
-
-        //Searching in the engine for the results
-        ResultSet<MetaTestModel> results = engine.search(query);
-
-        //should return two results because of the or condition
-        assertTrue(results.getSize() > 1);
-
-        printResults(results);
-    }
-
-    @Test
-    public void test11() {
-        CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);
-
-        //Create the Model/Attributes Path
-        Path<MetaTestModel> model = criteriaQuery.from(MetaTestModel.class);
-        Path<String> titleModel = model.get("title");
-
-        //NotEqual(titleModel, "aaa") OR NotEqual(contentModel, "bbb")
-        CriteriaQuery query = cb.createQuery().where(
-                cb.not(cb.not(cb.equal(titleModel, "aaa")))).limit(8);
-
-        //Searching in the engine for the results
-        ResultSet<MetaTestModel> results = engine.search(query);
-
-        assertTrue(results.getSize() == 1);
-
-        printResults(results);
-    }
-
-    //just print the results to the standard output
+    //prints the results
     private void printResults(ResultSet<MetaTestModel> results) {
         System.out.println("Number of retrieved elements: " + results.getSize());
         for (Result<MetaTestModel> r : results) {

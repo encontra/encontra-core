@@ -1,4 +1,4 @@
-package pt.inevo.encontra.test;
+package pt.inevo.encontra.test.query;
 
 import pt.inevo.encontra.common.Result;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
