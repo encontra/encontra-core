@@ -73,4 +73,9 @@ public class ExampleDescriptor extends SimpleDescriptor {
         // actually has the most recent cost counts
         return p[n];
     }
+
+    @Override
+    public String toString() {
+        return "{id: " + this.getId() + ", value: " + this.getValue() + "}";
+    }
 }
