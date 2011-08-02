@@ -9,6 +9,9 @@ import pt.inevo.encontra.descriptors.DescriptorExtractor;
 import pt.inevo.encontra.descriptors.SimpleDescriptor;
 import pt.inevo.encontra.index.SimpleIndex;
 import pt.inevo.encontra.index.search.SimpleSearcher;
+import pt.inevo.encontra.query.CriteriaQuery;
+import pt.inevo.encontra.query.Path;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.storage.SimpleObjectStorage;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.StringObject;
@@ -82,10 +85,23 @@ public class SimpleTest extends TestCase {
     public void test1() {
         //Searching in the engine for the results
         long timeBefore = Calendar.getInstance().getTimeInMillis();
-        ResultSet<StringObject> results = searcher.similar(new StringObject("11"), 20);
+        ResultSet<StringObject> results = searcher.similar(new StringObject("11"), 100);
         long timeAfter = Calendar.getInstance().getTimeInMillis();
         System.out.println("Search took: " + (timeAfter - timeBefore));
         printResults(results);
+    }
+
+    @Test
+    public void test2() {
+        CriteriaBuilderImpl cb = new CriteriaBuilderImpl();
+
+        Path<StringObject> modelPath = new Path(StringObject.class);
+        CriteriaQuery<StringObject> query = cb.createQuery(StringObject.class).where(cb.similar(modelPath, new StringObject("11"))).limit(100);
+
+        ResultSet<StringObject> results = searcher.search(query);
+
+        printResults(results);
+
     }
 
     //prints the results
