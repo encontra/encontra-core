@@ -13,10 +13,6 @@ import pt.inevo.encontra.test.entities.MetaTestModel;
 */
 public class CriteriaQuerySimilarityTest extends AbstractCriteriaQueryTest {
 
-    public CriteriaQuerySimilarityTest(String testName) {
-        super(testName);
-    }
-
     @Test
     public void test1() {
         CriteriaQuery<MetaTestModel> criteriaQuery = cb.createQuery(MetaTestModel.class);

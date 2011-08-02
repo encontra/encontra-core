@@ -77,7 +77,7 @@ public abstract class AbstractSearcherTest extends TestCase {
         //start the benchmark for the searching
         BenchmarkEntry entry = benchmark.start("test1");
         //perform the query
-        ResultSet<StringObject> results = searcher.similar(new StringObject("11"), 1000);
+        ResultSet<StringObject> results = searcher.similar(new StringObject("11"), 100);
         //stop the benchmark
         entry.stop();
         //log the benchmark
@@ -96,7 +96,7 @@ public abstract class AbstractSearcherTest extends TestCase {
         //Grab a path for the model StringObject
         Path<StringObject> modelPath = new Path<StringObject>(StringObject.class);
         //Create the query to search for similar objects
-        CriteriaQuery query = cb.createQuery().where(cb.similar(modelPath, new StringObject("11"))).limit(1000);
+        CriteriaQuery query = cb.createQuery().where(cb.similar(modelPath, new StringObject("11"))).limit(100);
 
         //Searching in the engine for the results
         ResultSet<StringObject> results = searcher.search(query);

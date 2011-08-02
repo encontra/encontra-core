@@ -1,5 +1,6 @@
 package pt.inevo.encontra.test.query;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -15,13 +16,9 @@ import pt.inevo.encontra.test.entities.MetaTestModel;
 */
 public class CriteriaQueryParallelTest extends AbstractCriteriaQueryTest {
 
-    public CriteriaQueryParallelTest(String testName) {
-        super(testName);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeClass
+    public static void setUp() throws Exception {
+        AbstractCriteriaQueryTest.setUp();
         engine.setQueryProcessor(new QueryProcessorDefaultParallelImpl());
     }
 

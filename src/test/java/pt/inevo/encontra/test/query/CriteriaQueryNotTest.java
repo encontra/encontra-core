@@ -1,5 +1,6 @@
 package pt.inevo.encontra.test.query;
 
+import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -11,10 +12,6 @@ import pt.inevo.encontra.test.entities.MetaTestModel;
 * @author ricardo
 */
 public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
-
-    public CriteriaQueryNotTest(String testName) {
-        super(testName);
-    }
 
     @Test
     public void test1() {
@@ -30,7 +27,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //check if it returned one result
-        assertTrue(results.getSize() == 7);
+        TestCase.assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -50,7 +47,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return no results
-        assertTrue(results.getSize() == 7);
+        TestCase.assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -69,7 +66,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return only one result
-        assertTrue(results.getSize() == 7);
+        TestCase.assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -92,7 +89,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //only one result because of the and condition
-        assertTrue(results.isEmpty());
+        TestCase.assertTrue(results.isEmpty());
 
         printResults(results);
     }
@@ -115,7 +112,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //only one result because of the and condition
-        assertTrue(results.getSize() == 1);
+        TestCase.assertTrue(results.getSize() == 1);
 
         printResults(results);
     }
@@ -138,7 +135,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.getSize() == 7);
+        TestCase.assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -162,7 +159,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.getSize() == 6);
+        TestCase.assertTrue(results.getSize() == 6);
 
         printResults(results);
     }
@@ -186,7 +183,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.getSize() == 8);
+        TestCase.assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -210,7 +207,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.getSize() == 6);
+       TestCase.assertTrue(results.getSize() == 6);
 
         printResults(results);
     }
@@ -236,7 +233,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         ResultSet<MetaTestModel> results = engine.search(query);
 
         //should return two results because of the or condition
-        assertTrue(results.getSize() > 1);
+        TestCase.assertTrue(results.getSize() > 1);
 
         printResults(results);
     }
@@ -256,7 +253,7 @@ public class CriteriaQueryNotTest extends AbstractCriteriaQueryTest {
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 1);
+        TestCase.assertTrue(results.getSize() == 1);
 
         printResults(results);
     }

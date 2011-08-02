@@ -58,7 +58,7 @@ public class SimpleSearcherTest extends AbstractSearcherTest {
         searcher.setIndex(new SimpleIndex(ExampleDescriptor.class));
 
         //Inserting some elements into the engine (indexes)
-        for (int i = 0; i < 1000000; i++)
+        for (int i = 0; i < 100000; i++)
             searcher.insert(new StringObject(Integer.toString(i)));
     }
 }

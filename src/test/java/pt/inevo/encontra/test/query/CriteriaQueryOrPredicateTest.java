@@ -1,5 +1,6 @@
 package pt.inevo.encontra.test.query;
 
+import junit.framework.TestCase;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.query.CriteriaQuery;
@@ -13,10 +14,6 @@ import pt.inevo.encontra.test.entities.MetaTestModel;
  * @author ricardo
  */
 public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
-
-    public CriteriaQueryOrPredicateTest(String testName) {
-        super(testName);
-    }
 
     @Test
     public void test1() {
@@ -37,7 +34,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 8);
+        TestCase.assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -62,7 +59,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 8);
+        TestCase.assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -88,7 +85,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 8);
+        TestCase.assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -114,7 +111,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 8);
+        TestCase.assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -140,7 +137,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 8);
+        TestCase.assertTrue(results.getSize() == 8);
 
         printResults(results);
     }
@@ -166,7 +163,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 7);
+        TestCase.assertTrue(results.getSize() == 7);
 
         printResults(results);
     }
@@ -192,7 +189,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 6);
+        TestCase.assertTrue(results.getSize() == 6);
 
         printResults(results);
     }
@@ -218,7 +215,7 @@ public class CriteriaQueryOrPredicateTest extends AbstractCriteriaQueryTest {
 
         ResultSet<MetaTestModel> results = engine.search(query);
 
-        assertTrue(results.getSize() == 7);
+        TestCase.assertTrue(results.getSize() == 7);
 
         printResults(results);
     }

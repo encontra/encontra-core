@@ -1,6 +1,7 @@
 package pt.inevo.encontra.test.query;
 
-import junit.framework.TestCase;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import pt.inevo.encontra.benchmark.Benchmark;
 import pt.inevo.encontra.common.DefaultResultProvider;
 import pt.inevo.encontra.common.Result;
@@ -18,20 +19,14 @@ import pt.inevo.encontra.storage.SimpleObjectStorage;
 import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
-public class AbstractCriteriaQueryTest extends TestCase {
+public abstract class AbstractCriteriaQueryTest {
 
-    protected SimpleEngine<MetaTestModel> engine;
-    protected CriteriaBuilderImpl cb;
-    protected Benchmark benchmark;
+    protected static SimpleEngine<MetaTestModel> engine;
+    protected static CriteriaBuilderImpl cb;
+    protected static Benchmark benchmark;
 
-    public AbstractCriteriaQueryTest(String testName) {
-        super(testName);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
+    @BeforeClass
+    public static void setUp() throws Exception {
         //Creating a simple descriptor
         DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
 
@@ -76,9 +71,8 @@ public class AbstractCriteriaQueryTest extends TestCase {
         cb = new CriteriaBuilderImpl();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @AfterClass
+    public static void tearDown() throws Exception {
         engine = null;
         cb = null;
     }

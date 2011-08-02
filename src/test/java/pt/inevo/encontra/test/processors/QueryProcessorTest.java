@@ -1,12 +1,13 @@
 package pt.inevo.encontra.test.processors;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.test.query.AbstractCriteriaQueryTest;
 import pt.inevo.encontra.test.entities.MetaTestModel;
+import pt.inevo.encontra.test.query.AbstractCriteriaQueryTest;
 
 /**
 * Testing the Query Processor (legacy test).
@@ -14,13 +15,9 @@ import pt.inevo.encontra.test.entities.MetaTestModel;
 */
 public class QueryProcessorTest extends AbstractCriteriaQueryTest {
 
-    public QueryProcessorTest(String testName) {
-        super(testName);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @BeforeClass
+    public static void setUp() throws Exception {
+        AbstractCriteriaQueryTest.setUp();
 
         for (int i = 0; i < 1000; i++) {
             engine.insert(new MetaTestModel("aia", "bi"));
