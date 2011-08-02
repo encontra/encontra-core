@@ -9,7 +9,7 @@ import pt.inevo.encontra.query.criteria.exps.*;
 /**
  * Based on openjpa-persistence/src/main/java/org/apache/openjpa/persistence/criteria/CriteriaBuilderImpl.java
  */
-public class CriteriaBuilderImpl implements ExpressionParser{
+public class CriteriaBuilderImpl<T> implements ExpressionParser, CriteriaBuilder<T>{
     /*
     public QueryExpressions eval(Object parsed, Query query,ExpressionFactory factory) {
         CriteriaQueryImpl<?> c = (CriteriaQueryImpl<?>) parsed;

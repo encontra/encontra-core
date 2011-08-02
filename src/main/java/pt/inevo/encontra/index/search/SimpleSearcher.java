@@ -10,6 +10,7 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.exps.Equal;
 import pt.inevo.encontra.query.criteria.exps.NotEqual;
 import pt.inevo.encontra.query.criteria.exps.Similar;
@@ -24,6 +25,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     public SimpleSearcher() {
         queryProcessor = new QueryProcessorDefaultImpl();
+        criteriaBuilder = new CriteriaBuilderImpl();
     }
 
     @Override
@@ -48,24 +50,6 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             }
         }
 
-        return getResultObjects(results);
-    }
-
-    public IndexedObject getIndexedObject(Object o) {
-        if (o instanceof IndexedObject) {
-            return (IndexedObject)o;
-        }
-        // TODO this method already exists in the full version of the code
-        return null;
-    }
-
-    @Override
-    public ResultSet<O> similar(O entity, int knn) {
-        ResultSet<IEntry> results = new ResultSetDefaultImpl<IEntry>();
-        if (entity instanceof IndexedObject) {
-            Descriptor d = getDescriptorExtractor().extract(entity);
-            results = performKnnQuery(d, knn);
-        }
         return getResultObjects(results);
     }
 
