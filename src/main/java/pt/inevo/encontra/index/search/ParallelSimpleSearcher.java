@@ -10,14 +10,6 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.EntryProvider;
-import pt.inevo.encontra.index.IndexedObject;
-import pt.inevo.encontra.query.CriteriaQuery;
-import pt.inevo.encontra.query.Query;
-import pt.inevo.encontra.query.QueryParserNode;
-import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
-import pt.inevo.encontra.query.criteria.exps.Equal;
-import pt.inevo.encontra.query.criteria.exps.NotEqual;
-import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
 import scala.Option;
@@ -26,65 +18,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Parallel Simple searcher
+ * Parallel Simple searcher.
+ * A Simple Searcher that uses Actors for performing the Search request.
+ * Uses a coordinator and a set of consumers to perform the search.
  */
-public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
+public class ParallelSimpleSearcher<O extends IEntity> extends SimpleSearcher<O> {
 
     public ParallelSimpleSearcher() {
-        queryProcessor = new QueryProcessorDefaultImpl();
+        super();
     }
 
     @Override
-    public boolean insert(O entry) {
-        assert (entry != null);
-        Descriptor descriptor = extractor.extract(entry);
-        return index.insert(descriptor);
-    }
-
-    @Override
-    public boolean remove(O entry) {
-        assert (entry != null);
-        Descriptor descriptor = extractor.extract(entry);
-        return index.remove(descriptor);
-    }
-
-    @Override
-    public ResultSet<O> search(Query query) {
-        ResultSet<IEntry> results = new ResultSetDefaultImpl<IEntry>();
-
-        if (query instanceof CriteriaQuery) {
-            //parse the query
-            QueryParserNode node = queryProcessor.getQueryParser().parse(query);
-            //make the query
-            if (node.predicateType.equals(Similar.class)) {
-                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, index.getEntryProvider().size());
-            } else if (node.predicateType.equals(Equal.class)) {
-                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performEqualQuery(d, true);
-            } else if (node.predicateType.equals(NotEqual.class)) {
-                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performEqualQuery(d, false);
-            } else {
-                return getResultObjects(queryProcessor.search(query));
-            }
-        }
-
-        return getResultObjects(results);
-    }
-
-    @Override
-    public ResultSet<O> similar(O object, int knn) {
-        ResultSet<IEntry> results = new ResultSetDefaultImpl<IEntry>();
-        if (object instanceof IndexedObject) {
-            Descriptor d = getDescriptorExtractor().extract(object);
-            results = performKnnQuery(d, index.getEntryProvider().size());
-        } else {
-            // TODO -
-        }
-        return getResultObjects(results).getFirstResults(knn);
-    }
-
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
 
         ResultSet resultList = new ResultSetDefaultImpl(new Result(d), maxHits);
@@ -123,6 +67,7 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
         return resultList;
     }
 
+    @Override
     protected ResultSet<IEntry> performEqualQuery(Descriptor d, boolean equal) {
 
         ResultSet resultList = null;
@@ -168,12 +113,9 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
         return resultList;
     }
 
-    @Override
-    protected Result<O> getResultObject(Result<IEntry> indexEntryresult) {
-        return new Result<O>((O) getDescriptorExtractor().getIndexedObject((Descriptor) indexEntryresult.getResultObject()));
-    }
-
-    //Message to be passed between actors
+    /*
+    * Message to be passed between actors
+    */
     class Message {
 
         public String operation;
@@ -183,6 +125,9 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
         public boolean equal;
     }
 
+    /**
+     * A consumer actor
+     */
     class SimpleSearcherActor extends UntypedActor {
 
         protected EntryProvider<Descriptor> provider;
@@ -259,6 +204,9 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
         }
     }
 
+    /**
+     * The Coordinator Actor
+     */
     class SimpleSearchCoordinator extends UntypedActor {
 
         protected int MAX_ACTORS = 100;
@@ -269,6 +217,7 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
         protected EntryProvider provider;
         protected ResultSet resultList;
         protected Message originalMessage;
+        protected long processedElements;
 
         SimpleSearchCoordinator() {
             //create a group of several searchers through the index
@@ -311,8 +260,8 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
                         m.operation = message.operation;    //use the exact same operation
                         m.posInit = 0;
                         m.posInit = posAct;
-                        if ((posAct + 400) < provider.size()) {
-                            posAct += 400;
+                        if ((posAct + 1000) < provider.size()) {
+                            posAct += 1000;
                         } else {
                             posAct = provider.size();
                         }
@@ -339,6 +288,10 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
             } else if (message.operation.equals("RESULT")) {
                 //add the result and keep going on
                 resultList.add((Result) message.obj);
+                processedElements++;
+                if (processedElements % 1000 == 0) {
+                    System.out.println("Elements processed: " + processedElements);
+                }
             } else if (message.operation.equals("FINISHED")) {
 
                 ActorRef searchActor = getContext().getSender().get();
@@ -347,8 +300,8 @@ public class ParallelSimpleSearcher<O extends IEntity> extends AbstractSearcher<
                     Message m = new Message();
                     m.operation = originalMessage.operation;    //use the exact same operation
                     m.posInit = posAct;
-                    if ((posAct + 400) < provider.size()) {
-                        posAct += 400;
+                    if ((posAct + 1000) < provider.size()) {
+                        posAct += 1000;
                     } else {
                         posAct = provider.size();
                     }

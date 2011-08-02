@@ -1,4 +1,4 @@
-package pt.inevo.encontra.test;
+package pt.inevo.encontra.test.query;
 
 import junit.framework.TestCase;
 import pt.inevo.encontra.benchmark.Benchmark;

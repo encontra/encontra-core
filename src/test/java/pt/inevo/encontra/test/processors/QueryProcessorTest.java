@@ -5,20 +5,14 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.test.AbstractCriteriaQueryTest;
+import pt.inevo.encontra.test.query.AbstractCriteriaQueryTest;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
-//import pt.inevo.encontra.query.QueryProcessorParallelLinearImpl;c
-
 /**
-* Smoke test: testing the creation of an engine and the search for similar
-* objects in it.
+* Testing the Query Processor (legacy test).
 * @author ricardo
 */
 public class QueryProcessorTest extends AbstractCriteriaQueryTest {
-
-//    private SimpleEngine<MetaTestModel> engine;
-//    private CriteriaBuilderImpl cb;
 
     public QueryProcessorTest(String testName) {
         super(testName);
@@ -87,8 +81,8 @@ public class QueryProcessorTest extends AbstractCriteriaQueryTest {
         //Create the Query
         CriteriaQuery query = cb.createQuery().where(
                 cb.and(
-                    cb.similar(model, m),
-                    cb.equal(titleModel, "aaa"))).distinct(true).limit(20);
+                        cb.similar(model, m),
+                        cb.equal(titleModel, "aaa"))).distinct(true).limit(20);
 
         //Searching in the engine for the results
         ResultSet<MetaTestModel> results = engine.search(query);

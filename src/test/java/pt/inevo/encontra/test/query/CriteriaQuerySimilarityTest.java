@@ -5,7 +5,6 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Path;
 import pt.inevo.encontra.query.criteria.Expression;
-import pt.inevo.encontra.test.AbstractCriteriaQueryTest;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**

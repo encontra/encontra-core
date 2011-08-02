@@ -5,7 +5,6 @@ import pt.inevo.encontra.common.ResultSet;
 import pt.inevo.encontra.common.ResultSetDefaultImpl;
 import pt.inevo.encontra.descriptors.Descriptor;
 import pt.inevo.encontra.index.EntryProvider;
-import pt.inevo.encontra.index.IndexedObject;
 import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
@@ -16,7 +15,6 @@ import pt.inevo.encontra.query.criteria.exps.NotEqual;
 import pt.inevo.encontra.query.criteria.exps.Similar;
 import pt.inevo.encontra.storage.IEntity;
 import pt.inevo.encontra.storage.IEntry;
-
 
 /**
  * Simple searcher
@@ -56,7 +54,8 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {
         Result rs = new Result(d);
         ResultSet results = new ResultSetDefaultImpl<Descriptor>(rs, maxHits);
-        getResultProvider().setResultSet(results);
+        if (getResultProvider() != null)
+            getResultProvider().setResultSet(results);
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
 
