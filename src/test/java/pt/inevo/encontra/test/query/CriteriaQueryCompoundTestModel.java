@@ -34,68 +34,6 @@ public class CriteriaQueryCompoundTestModel extends TestCase {
     private SimpleEngine<CompoundMetaTestModel> engine;
     private CriteriaBuilderImpl cb;
 
-    //MetaTestModelQueryProcessor - for testing purposes
-//    class MetaTestModelQueryProcessor<E extends IEntity> extends QueryProcessorDefaultImpl<E> {
-//
-//        @Override
-//        public boolean insert(E object) {
-//            if (object instanceof IndexedObject) {
-//                IndexedObject obj = (IndexedObject) object;
-//
-//                //is it a compound object
-//                if (obj.getValue() instanceof IEntity) {
-//                    //first set the ID
-//                    IEntity entity = (IEntity) obj.getValue();
-//                    entity.setId(obj.getId());
-//                    processBean(entity);
-//
-//                } else {    //its not a compound object
-//                    insertObject(object);
-//                }
-//
-//            } else {
-//                processBean(object);
-//            }
-//
-//            return true;
-//        }
-//
-//        private void processBean(IEntity entity) {
-//            try {
-//                List<IndexedObject> indexedObjects = indexedObjectFactory.processBean(entity);
-//                for (IndexedObject obj : indexedObjects) {
-//                    insertObject((E) obj);
-//                }
-//            } catch (IndexingException e) {
-//                System.out.println("[Error] Exception: " + e.getMessage());
-//            }
-//        }
-//    }
-
-//    //MetaTestModelSearcher - for testing purposes
-//    class MetaTestModelSearcher<O extends IEntity> extends AbstractSearcher<O> {
-//
-//        @Override
-//        public boolean insert(O object) {
-//            return queryProcessor.insert(object);
-//        }
-//
-//        @Override
-//        public boolean remove(O object) {
-//            return queryProcessor.remove(object);
-//        }
-//
-//        @Override
-//        public ResultSet search(Query query) {
-//            return queryProcessor.search(query);
-//        }
-//
-//        @Override
-//        protected Result getResultObject(Result<IEntry> entryResult) {
-//            return new Result<O>((O) storage.get(entryResult.getResultObject().getId()));
-//        }
-//    }
-
     public CriteriaQueryCompoundTestModel(String testName) {
         super(testName);
     }

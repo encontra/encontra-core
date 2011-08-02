@@ -24,7 +24,9 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends IQueryProcesso
 
     public QueryProcessorDefaultImpl() {
         this(null);
+    }
 
+    protected void initOperatorProcessors() {
         //initializing the default query operators
         QueryOperatorProcessor operator = new SimilarOperatorProcessor();
         operator.setQueryProcessor(this);
@@ -46,6 +48,7 @@ public class QueryProcessorDefaultImpl<E extends IEntity> extends IQueryProcesso
         setCombiner(new ResultSetOperations());
         queryParser = new QueryParserDefaultImpl();
         logger = Logger.getLogger(this.getClass().getName());
+        initOperatorProcessors();
     }
 
     @Override

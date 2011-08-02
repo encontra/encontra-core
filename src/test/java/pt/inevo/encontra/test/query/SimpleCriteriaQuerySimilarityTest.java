@@ -23,8 +23,7 @@ import pt.inevo.encontra.test.entities.ExampleDescriptor;
 import pt.inevo.encontra.test.entities.MetaTestModel;
 
 /**
-* Smoke test: testing the creation of an engine and the search for similar
-* objects in it.
+* Simple test using only Indexed Objects.
 * @author ricardo
 */
 public class SimpleCriteriaQuerySimilarityTest extends TestCase {
