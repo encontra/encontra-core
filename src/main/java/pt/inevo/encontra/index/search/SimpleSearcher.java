@@ -10,6 +10,7 @@ import pt.inevo.encontra.query.CriteriaQuery;
 import pt.inevo.encontra.query.Query;
 import pt.inevo.encontra.query.QueryParserNode;
 import pt.inevo.encontra.query.QueryProcessorDefaultImpl;
+import pt.inevo.encontra.query.criteria.CriteriaBuilderImpl;
 import pt.inevo.encontra.query.criteria.exps.Equal;
 import pt.inevo.encontra.query.criteria.exps.NotEqual;
 import pt.inevo.encontra.query.criteria.exps.Similar;
@@ -24,6 +25,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
 
     public SimpleSearcher() {
         queryProcessor = new QueryProcessorDefaultImpl();
+        criteriaBuilder = new CriteriaBuilderImpl();
     }
 
     @Override
@@ -35,13 +37,13 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             QueryParserNode node = queryProcessor.getQueryParser().parse(query);
             //make the query
             if (node.predicateType.equals(Similar.class)) {
-                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
-                results = performKnnQuery(d, index.getEntryProvider().size());
+                Descriptor d = getDescriptorExtractor().extract(getIndexedObject(node.fieldObject));
+                results = performKnnQuery(d, (node.limit == 0)? index.getEntryProvider().size() : node.limit);
             } else if (node.predicateType.equals(Equal.class)) {
-                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                Descriptor d = getDescriptorExtractor().extract(getIndexedObject(node.fieldObject));
                 results = performEqualQuery(d, true);
             } else if (node.predicateType.equals(NotEqual.class)) {
-                Descriptor d = getDescriptorExtractor().extract(new IndexedObject(null, node.fieldObject));
+                Descriptor d = getDescriptorExtractor().extract(getIndexedObject(node.fieldObject));
                 results = performEqualQuery(d, false);
             } else {
                 results = queryProcessor.search(query);
@@ -49,16 +51,6 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
         }
 
         return getResultObjects(results);
-    }
-
-    @Override
-    public ResultSet<O> similar(O entity, int knn) {
-        ResultSet<IEntry> results = new ResultSetDefaultImpl<IEntry>();
-        if (entity instanceof IndexedObject) {
-            Descriptor d = getDescriptorExtractor().extract(entity);
-            results = performKnnQuery(d, index.getEntryProvider().size());
-        }
-        return getResultObjects(results).getFirstResults(knn);
     }
 
     protected ResultSet<IEntry> performKnnQuery(Descriptor d, int maxHits) {

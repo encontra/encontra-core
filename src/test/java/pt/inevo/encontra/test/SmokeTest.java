@@ -38,7 +38,6 @@ public class SmokeTest extends TestCase {
         super(testName);
     }
 
-
     class SimpleMultiDescriptorExtractor extends MultiDescriptorExtractor<IndexedObject, Descriptor> {
 
         private DescriptorExtractor descriptorExtractor = new SimpleDescriptorExtractor(ExampleDescriptor.class);
