@@ -137,10 +137,11 @@ public class ResultSetOperations<E extends IEntity> {
             for (ResultSet set : results) {
                 if (set.containsResultObject(r.getResultObject())) {
                     resultScore += set.getScore(r.getResultObject());
-                    found++;
+//                    found++;
                 }
             }
-            resultScore /= found;
+//            resultScore /= found;
+            resultScore /= results.size();
             r.setScore(resultScore);
         }
 
