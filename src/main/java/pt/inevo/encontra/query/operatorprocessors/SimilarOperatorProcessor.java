@@ -34,6 +34,10 @@ public class SimilarOperatorProcessor<T> extends QueryOperatorProcessor<T> {
             results = processSIMILARCompound(node);
         }
 
+        //normalize and invert scores
+//        results.invertScores();
+//        results.normalizeScores();
+
         return results;
     }
 

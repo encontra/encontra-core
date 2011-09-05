@@ -45,12 +45,7 @@ public class ResultSetOperations<E extends IEntity> {
             validIds = storage.getValidIds(criteria);
         }
 
-        //invert and normalize all the results
-        for (ResultSet set : results) {
-            set.invertScores();
-            set.normalizeScores();
-        }
-
+        //all result sets must be inverted and normalized
         for (ResultSet set : results) {
 
             Iterator<Result> it = set.iterator();
@@ -86,6 +81,9 @@ public class ResultSetOperations<E extends IEntity> {
             }
         }
 
+        //just normalize the scores
+        combinedResultSet.normalizeScores();
+
         return combinedResultSet.getFirstResults(limit);
     }
 
@@ -101,8 +99,7 @@ public class ResultSetOperations<E extends IEntity> {
 
         //let's get the results
         for (ResultSet set : results) {
-            set.invertScores();
-            set.normalizeScores();
+            //the results must be already normalized
             Iterator<Result> it = set.iterator();
             while (it.hasNext()) {
                 Result r = it.next();
@@ -133,17 +130,21 @@ public class ResultSetOperations<E extends IEntity> {
         while (it.hasNext()) {
             Result r = it.next();
             double resultScore = r.getScore();
-            int found = 1;
             for (ResultSet set : results) {
-                if (set.containsResultObject(r.getResultObject())) {
-                    resultScore += set.getScore(r.getResultObject());
-//                    found++;
-                }
+                Result resultR = set.getResultByResultObject(r.getResultObject());
+
+                if (resultR != null) {
+                    resultScore += resultR.getScore();
+                    set.remove(resultR);
+                }   //the result object is not in this result set, so continue the iteration
             }
-//            resultScore /= found;
+            //always divide by the number of ResultSets, even when one doesn't contain the result object
             resultScore /= results.size();
             r.setScore(resultScore);
         }
+
+        //just normalize the scores
+        combinedResultSet.normalizeScores();
 
         return combinedResultSet.getFirstResults(limit);
     }
