@@ -12,6 +12,7 @@
         <groupId>pt.inevo.encontra</groupId>
         <artifactId>encontra</artifactId>
         <version>1.0-SNAPSHOT</version>
+	<relativePath>..</relativePath>
     </parent>
 
     <dependencies>
