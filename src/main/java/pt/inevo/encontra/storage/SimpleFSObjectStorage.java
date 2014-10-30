@@ -4,15 +4,12 @@ import pt.inevo.encontra.query.criteria.StorageCriteria;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by jpvguerreiro on 10/27/2014.
  */
 public class SimpleFSObjectStorage <ID extends Number,O extends IEntity<ID>> extends GenericEntryStorage<ID,O> implements ObjectStorage<ID,O> {
-
-    private static int counter = 0;
-
-    private Map<ID, O> map = new HashMap<ID, O>();
 
     public SimpleFSObjectStorage(Class<O> clazz) {super(clazz);}
 
@@ -44,23 +41,23 @@ public class SimpleFSObjectStorage <ID extends Number,O extends IEntity<ID>> ext
 
     @Override
     public O save(O obj) {
-        String obj_string = obj.toString();
         ID objId = obj.getId();
 
-        //Most of the times, the ImageModel was already loaded, so the ID is not null.
+        //The Id should be null and should be assigned here
         if (objId == null) {
-            objId = (ID) new Long(++counter);
+            objId = (ID) new Long(uniqueCurrentTimeMS());
             obj.setId(objId);
         }
 
-        //The objects should be stored all at the same time to avoid problems
-        //TODO find an incremental error-free way to deal with the storage
+        //The objects should be stored all at the same time to avoid duplications
         String objPath = "data/objects/"+objId.toString();
-        if (!new File(objPath).exists()) {
+        File currentFile = new File(objPath);
+        if (!currentFile.exists()) {
             try {
+                currentFile.getParentFile().mkdirs();
                 FileOutputStream fout = new FileOutputStream(objPath);
                 ObjectOutputStream oos = new ObjectOutputStream(fout);
-                oos.writeObject(obj_string);
+                oos.writeObject(obj);
                 oos.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -79,5 +76,15 @@ public class SimpleFSObjectStorage <ID extends Number,O extends IEntity<ID>> ext
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
-
+    private static final AtomicLong LAST_TIME_MS = new AtomicLong();
+    public static long uniqueCurrentTimeMS() {
+        long now = System.currentTimeMillis();
+        while(true) {
+            long lastTime = LAST_TIME_MS.get();
+            if (lastTime >= now)
+                now = lastTime+1;
+            if (LAST_TIME_MS.compareAndSet(lastTime, now))
+                return now;
+        }
+    }
 }
