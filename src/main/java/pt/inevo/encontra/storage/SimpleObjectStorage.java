@@ -2,8 +2,6 @@ package pt.inevo.encontra.storage;
 
 import pt.inevo.encontra.query.criteria.StorageCriteria;
 
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
