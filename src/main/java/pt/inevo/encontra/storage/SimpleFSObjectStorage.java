@@ -10,14 +10,14 @@ import java.util.concurrent.atomic.AtomicLong;
  * Created by jpvguerreiro on 10/27/2014.
  */
 public class SimpleFSObjectStorage <ID extends Number,O extends IEntity<ID>> extends GenericEntryStorage<ID,O> implements ObjectStorage<ID,O> {
-
-    public SimpleFSObjectStorage(Class<O> clazz) {super(clazz);}
+    String rootPath;
+    public SimpleFSObjectStorage(Class<O> clazz, String path) {super(clazz); this.rootPath = path;}
 
     @Override
     public O get(ID id) {
         O obj = null;
         try {
-            FileInputStream fin = new FileInputStream("data/objects/"+id.toString());
+            FileInputStream fin = new FileInputStream(this.rootPath+id.toString());
             ObjectInputStream ois = new ObjectInputStream(fin);
             obj = (O) ois.readObject();
         } catch (IOException e) {
@@ -50,7 +50,7 @@ public class SimpleFSObjectStorage <ID extends Number,O extends IEntity<ID>> ext
         }
 
         //The objects should be stored all at the same time to avoid duplications
-        String objPath = "data/objects/"+objId.toString();
+        String objPath = this.rootPath+objId.toString();
         File currentFile = new File(objPath);
         if (!currentFile.exists()) {
             try {
