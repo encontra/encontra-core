@@ -29,6 +29,6 @@ public class SimpleEngine<O extends IEntity> extends AbstractSearcher<O> {
 
     @Override
     protected Result<O> getResultObject(Result<IEntry> entryResult) {
-        return new Result<O>((O) storage.get( Long.parseLong((String) entryResult.getResultObject().getId())));
+        return new Result<O>((O) storage.get( Long.parseLong(entryResult.getResultObject().getId().toString())));
     }
 }
