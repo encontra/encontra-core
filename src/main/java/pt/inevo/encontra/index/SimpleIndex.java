@@ -1,5 +1,6 @@
 package pt.inevo.encontra.index;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -165,7 +166,7 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
     }
 
     @Override
-    public List<Serializable> getValidIds(StorageCriteria criteria){
+    public List<Serializable> getValidIds(StorageCriteria criteria) {
         return null;
     }
 
@@ -182,6 +183,10 @@ public class SimpleIndex<E extends IEntry> extends AbstractIndex<E> {
 
     @Override
     public void delete(IEntity object) {
+        //TO DO
+    }
+
+    public void close() throws IOException {
         //TO DO
     }
 }
