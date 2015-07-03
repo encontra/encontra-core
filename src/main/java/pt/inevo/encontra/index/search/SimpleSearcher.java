@@ -58,6 +58,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
             getResultProvider().setResultSet(results);
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
+        provider.begin();
 
         for (; provider.hasNext(); ) {
             Descriptor o = provider.getNext();
@@ -80,6 +81,7 @@ public class SimpleSearcher<O extends IEntity> extends AbstractSearcher<O> {
         getResultProvider().setResultSet(results);
 
         EntryProvider<Descriptor> provider = index.getEntryProvider();
+        provider.begin();
 
         for (; provider.hasNext(); ) {
             Descriptor o = provider.getNext();
